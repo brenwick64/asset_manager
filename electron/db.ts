@@ -8,21 +8,24 @@ const Database = require('better-sqlite3') as typeof import('better-sqlite3')
 type SqliteDb = import('better-sqlite3').Database
 let db: SqliteDb | null = null
 
-export function get_db(): SqliteDb {
+export function getDatabase(): SqliteDb {
 	if (!db) throw new Error('DB not initialized')
 	return db
 }
 
-export function init_db(): void {
+export function initDatabase(): void {
 	const db_path: string = path.join(app.getPath('userData'), 'asset_manager.db')
 	db = new Database(db_path)
 
-	get_db().exec(`
-		CREATE TABLE IF NOT EXISTS notes (
-			id INTEGER PRIMARY KEY,
-			text TEXT NOT NULL,
-			created_at TEXT NOT NULL DEFAULT (datetime('now'))
-		);
-	`)
+	//TODO: Create tables if they don't exist
+
+	// get_db().exec(`
+	// 	CREATE TABLE IF NOT EXISTS notes (
+	// 		id INTEGER PRIMARY KEY,
+	// 		text TEXT NOT NULL,
+	// 		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	// 	);
+	// `)
+
     console.info('Database initialized at', db_path)
 }

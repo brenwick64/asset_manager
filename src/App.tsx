@@ -1,12 +1,12 @@
 import './App.css'
+import AssetList from './components/AudioAssetList/AudioAssetList'
 
 function App() {
 
   return (
-    <>
-      <div>
-      </div>
-    </>
+    <div className='app'>
+      <AssetList />
+    </div>
   )
 }
 

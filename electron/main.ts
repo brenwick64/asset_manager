@@ -1,29 +1,25 @@
-import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
+import { app, Menu } from 'electron'
 import { fileURLToPath } from 'node:url'
 
 // Custom Modules
-import { create_window } from './window'
-import { register_ipc } from './ipc'
-import { init_db } from './db'
+import { createWindow } from './window'
+import { registerIPC } from './ipc'
+import { initDatabase } from './db'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 process.env.APP_ROOT = path.join(__dirname, '..')
 
 app.whenReady().then(() => {
-	init_db()
-	register_ipc()
-	create_window()
+	Menu.setApplicationMenu(null) // removes the menu bar (File, Edit, etc.)
+
+	initDatabase()
+	registerIPC()
+	createWindow()	
 })
 
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit()
-	}
-})
-
-app.on('activate', () => {
-	if (BrowserWindow.getAllWindows?.().length === 0) {
-		create_window()
 	}
 })

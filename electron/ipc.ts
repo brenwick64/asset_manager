@@ -1,16 +1,17 @@
 import { ipcMain } from 'electron'
-import { get_db } from './db'
+import { getDatabase } from './db'
 
-export function register_ipc(): void {
-	ipcMain.handle('notes:list', () => {
-		return get_db()
-			.prepare('SELECT * FROM notes ORDER BY id DESC')
+export function registerIPC(): void {	
+	ipcMain.handle('assets:list', () => {
+		const rows = getDatabase()
+			.prepare('SELECT * FROM audio_assets')
 			.all()
+		return JSON.stringify(rows)
 	})
 
-	ipcMain.handle('notes:add', (_event, text: string) => {
-		return get_db()
-			.prepare('INSERT INTO notes (text) VALUES (?)')
-			.run(text)
-	})
+	// ipcMain.handle('assets:add', (_event, text: string) => {
+	// 	return getDatabase()
+	// 		.prepare('INSERT INTO notes (text) VALUES (?)')
+	// 		.run(text)
+	// })
 }
