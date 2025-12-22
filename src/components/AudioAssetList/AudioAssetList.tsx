@@ -1,6 +1,6 @@
 import './AudioAssetList.css'
-
 import { useEffect, useState } from 'react'
+import AudioAssetEntry from '../AudioAssetEntry/AudioAssetEntry'
 
 function AssetList() {
     const [audioAssets, setAudioAssets] = useState<Array<AudioAsset>>([])
@@ -19,9 +19,9 @@ function AssetList() {
   return (
     <div>
       <div className="asset-list">
-        {audioAssets.map((asset) => (
+        {audioAssets.map((asset: AudioAsset) => (
           <div key={asset.uuid}>
-            {asset.storage_uri}
+            <AudioAssetEntry audioAsset={asset} />
           </div>
         ))}
       </div>
