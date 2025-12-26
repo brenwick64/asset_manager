@@ -1,0 +1,13 @@
+.file-drop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: aquamarine;
+    width: 25rem;
+    height: 20rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.file-drop-dragged {
+    background-color: gray;
+}

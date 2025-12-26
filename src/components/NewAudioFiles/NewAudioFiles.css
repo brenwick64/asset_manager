@@ -1,0 +1,4 @@
+.new-audio-files {
+    display: flex;
+    flex-direction: column;
+}

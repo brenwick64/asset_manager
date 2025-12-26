@@ -1,11 +1,11 @@
 import './App.css'
-import AssetList from './components/AudioAssetList/AudioAssetList'
+import FileDrop from './components/FileDrop/FileDrop'
 
 function App() {
 
   return (
     <div className='app'>
-      <AssetList />
+      <FileDrop />
     </div>
   )
 }
