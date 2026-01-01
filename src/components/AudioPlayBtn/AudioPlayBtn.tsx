@@ -1,19 +1,12 @@
 import './AudioPlayBtn.css'
 
-function AudioPlayBtn({ fileName, filePath } : { fileName: string, filePath: string }) {
-
-    const playAudio = () => {
-        const audioElement = document.getElementById(fileName) as HTMLAudioElement
-        if (audioElement) {
-            audioElement.play()
-        }
-    }
-
+function AudioPlayBtn({ playAudio } : { playAudio: () => void }) {
 
   return (
-    <div className="audio-play-btn">
-        <audio id={fileName} src={filePath}></audio>
-        <button onClick={playAudio}>Play</button>
+    <div className='audio-controls'>
+      <div className="audio-play-btn">
+          <button onClick={playAudio}>Play</button>
+      </div>
     </div>
   )
 }

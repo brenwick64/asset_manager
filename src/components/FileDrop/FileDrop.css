@@ -3,8 +3,8 @@
     align-items: center;
     justify-content: center;
     background-color: aquamarine;
-    width: 25rem;
-    height: 20rem;
+    width: 90%;
+    height: 75%;
     transition: all 0.2s ease-in-out;
 }
 
