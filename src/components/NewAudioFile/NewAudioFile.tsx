@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
+import AudioControls from "../AudioControls/AudioControls"
+
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00"
@@ -91,8 +93,11 @@ export default function AudioPlayer({ file }: { file: File }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
       <audio ref={audioRef} src={objectUrl} preload="metadata" />
+      {file.name}
+      <AudioControls audioRef={audioRef} />
+      {/* <AudioControls isPlaying={isPlaying} onClick={togglePlay} /> */}
 
-      <button onClick={togglePlay} disabled={!isReady}>
+      {/* <button onClick={togglePlay} disabled={!isReady}>
         {isPlaying ? "Pause" : "Play"}
       </button>
 
@@ -109,7 +114,7 @@ export default function AudioPlayer({ file }: { file: File }) {
 
       <div style={{ minWidth: 90, fontVariantNumeric: "tabular-nums" }}>
         {formatTime(currentTime)} / {formatTime(duration)}
-      </div>
+      </div> */}
     </div>
   )
 }

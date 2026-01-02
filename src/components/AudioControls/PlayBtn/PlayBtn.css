@@ -1,0 +1,18 @@
+.play-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    outline: solid 1px rgba(0, 0, 0, 0.253);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding-left: 1px; /* Adjust for visual centering */
+}
+
+.play-btn svg {
+    outline: gray;
+    fill: gray;
+}
