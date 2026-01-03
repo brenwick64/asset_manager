@@ -4,7 +4,8 @@ import { FaPlay, FaPause } from "react-icons/fa";
 
 
 function PlayBtn({ audioRef }: { audioRef: React.RefObject<HTMLAudioElement> }) {
-  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [isPlaying, setIsPlaying] = useState<boolean>(audioRef.current?.paused === false)
+  
 
   const togglePlay = (): void => {
     const audio = audioRef.current

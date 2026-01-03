@@ -1,0 +1,1 @@
+export const MIN_AUDIO_DURATION_SEC: number = 1

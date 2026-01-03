@@ -12,6 +12,7 @@ function formatTime(seconds: number): string {
 
 export default function AudioPlayer({ file }: { file: File }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioLoaded, setAudioLoaded] = useState<boolean>(false)
 
   const [objectUrl, setObjectUrl] = useState<string>("")
   const [isReady, setIsReady] = useState<boolean>(false)
@@ -34,6 +35,10 @@ export default function AudioPlayer({ file }: { file: File }) {
     const audio = audioRef.current
     if (!audio) return
 
+    const onAudioLoaded = () => {
+      setAudioLoaded(true)
+    }
+
     const onLoadedMetadata = () => {
       setIsReady(true)
       setDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
@@ -52,6 +57,8 @@ export default function AudioPlayer({ file }: { file: File }) {
       setCurrentTime(Number.isFinite(audio.duration) ? audio.duration : 0)
     }
 
+    audio.addEventListener("loadeddata", onAudioLoaded)
+
     audio.addEventListener("loadedmetadata", onLoadedMetadata)
     audio.addEventListener("timeupdate", onTimeUpdate)
     audio.addEventListener("play", onPlay)
@@ -59,6 +66,7 @@ export default function AudioPlayer({ file }: { file: File }) {
     audio.addEventListener("ended", onEnded)
 
     return () => {
+      audio.removeEventListener("loadeddata", onAudioLoaded)
       audio.removeEventListener("loadedmetadata", onLoadedMetadata)
       audio.removeEventListener("timeupdate", onTimeUpdate)
       audio.removeEventListener("play", onPlay)
@@ -94,7 +102,7 @@ export default function AudioPlayer({ file }: { file: File }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
       <audio ref={audioRef} src={objectUrl} preload="metadata" />
       {file.name}
-      <AudioControls audioRef={audioRef} />
+      <AudioControls audioRef={audioRef} audioLoaded={audioLoaded} />
       {/* <AudioControls isPlaying={isPlaying} onClick={togglePlay} /> */}
 
       {/* <button onClick={togglePlay} disabled={!isReady}>

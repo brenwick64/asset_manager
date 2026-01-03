@@ -1,61 +1,65 @@
-import React, { useEffect, useState } from "react"
 import "./AudioSlider.css"
+import { MIN_AUDIO_DURATION_SEC } from '../../../globals/constants'
+import React, { useEffect, useState } from "react"
 
-function AudioSlider({ audioRef }: { audioRef: React.RefObject<HTMLAudioElement> }) {
-  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0)
-  const [durationSec, setDurationSec] = useState<number>(0)
+type Props = {
+  audioRef: React.RefObject<HTMLAudioElement>
+}
 
-  const onSeek = (value: number): void => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = value
-    setCurrentTimeSec(value)
+function AudioSlider({ audioRef }: Props) {
+  const [durationSec, setDurationSec] = useState<number>(audioRef.current?.duration || 0)
+  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0)  
+
+
+  const handleSeek = (value: number): void => {
+        const audio = audioRef.current
+        if (!audio) return
+        audio.currentTime = value
   }
+
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const syncDuration = () => {
-      const d = Number.isFinite(audio.duration) ? audio.duration : 0
-      setDurationSec(d)
-    }
-
-    const handleTimeUpdate = () => {
+    const onTimeUpdate = (): void => {
       if (durationSec < 1) return
       setCurrentTimeSec(audio.currentTime)
     }
 
-    const handleEnded = () => {
+    const onDurationChange = (): void => {
+      setDurationSec(Number.isFinite(audio.duration) ? audio.duration : 0)
+    }
+
+    const onEnded = (): void => {
       if (durationSec < 1) return
       setCurrentTimeSec(Number.isFinite(audio.duration) ? audio.duration : 0)
     }
 
-    syncDuration()
-
-    audio.addEventListener("loadedmetadata", syncDuration)
-    audio.addEventListener("durationchange", syncDuration)
-    audio.addEventListener("timeupdate", handleTimeUpdate)
-    audio.addEventListener("ended", handleEnded)
+    audio.addEventListener("timeupdate", onTimeUpdate)
+    audio.addEventListener("durationchange", onDurationChange)
+    audio.addEventListener("ended", onEnded)
 
     return () => {
-      audio.removeEventListener("loadedmetadata", syncDuration)
-      audio.removeEventListener("durationchange", syncDuration)
-      audio.removeEventListener("timeupdate", handleTimeUpdate)
-      audio.removeEventListener("ended", handleEnded)
+      audio.removeEventListener("timeupdate", onTimeUpdate)
+      audio.removeEventListener("durationchange", onDurationChange)
+      audio.removeEventListener("ended", onEnded)
     }
   }, [audioRef, durationSec])
 
+
   return (
-    <input
-      type="range"
-      min={0}
-      max={durationSec}
-      step={0.1}
-      value={Math.min(currentTimeSec, durationSec)}
-      onChange={(e) => onSeek(Number(e.target.value))}
-      disabled={durationSec < 1}
-    />
+    <>
+      <input
+        type="range"
+        min={0}
+        max={durationSec}
+        step={0.1}
+        value={Math.min(currentTimeSec, durationSec)}
+        onChange={(e) => handleSeek(Number(e.target.value))}
+        disabled={durationSec < MIN_AUDIO_DURATION_SEC}
+      />
+    </>
   )
 }
 
