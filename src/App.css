@@ -7,3 +7,14 @@
     height: 100vh;
     background-color: #f0f0f0;
 }
+
+.scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    height: 80%;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}

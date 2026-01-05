@@ -1,0 +1,11 @@
+.file-upload-scene {
+}
+
+.file-upload-scene-dragged {
+    border-color: #4a90e2;
+    background-color: #e6f0fa;
+}
+
+.upload-icon {
+    pointer-events: none;
+}

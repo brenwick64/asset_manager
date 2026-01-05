@@ -1,11 +1,12 @@
 import './App.css'
-import FileDrop from './components/FileDrop/FileDrop'
+import FileUploadScene from './scenes/FileUploadScene/FileUploadScene'
+
 
 function App() {
 
   return (
     <div className='app'>
-      <FileDrop />
+      <FileUploadScene />
     </div>
   )
 }

@@ -42,6 +42,7 @@ function FileDrop() {
       onDragOver={(e) => handleDragOver(e)}
       onDrop={(e) => handleDrop(e)}
     >
+      
       <NewAudioFiles files={files} />
     </div>
   )
