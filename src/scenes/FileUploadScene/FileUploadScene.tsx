@@ -1,67 +1,12 @@
 import './FileUploadScene.css'
 import { useState } from 'react'
 import { BsUpload } from 'react-icons/bs'
+import { extractFiles } from '../../utils/fileUploadUtils'
 
 
 function FileUploadScene() {
   const [dragged, setDragged] = useState<boolean>(false)
-
-  const readAllEntries = (dirEntry: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> => {
-    const reader = dirEntry.createReader()
-    const entries: FileSystemEntry[] = []
-
-    return new Promise(resolve => {
-      const readNext = () => {
-        reader.readEntries(batch => {
-          if (batch.length === 0) {
-            resolve(entries)
-            return
-          }
-
-          entries.push(...batch)
-          readNext()
-        })
-      }
-      readNext()
-    })
-  }
-
-
-const unpackItem = async (entry: FileSystemEntry): Promise<string[]> => {
-  if (entry.isFile) {
-    return [entry.fullPath]
-  }
-
-  if (entry.isDirectory) {
-    const entries = await readAllEntries(entry as FileSystemDirectoryEntry)
-
-    const results: string[] = []
-    for (const child of entries) {
-      results.push(...await unpackItem(child))
-    }
-    return results
-  }
-
-  return [] // Dropout
-}
-
-const unpackItems = async (itemList: DataTransferItem[]): Promise<string[]> => {
-  const results: string[] = []
-
-  for (const item of itemList) {
-    const entry = item.webkitGetAsEntry()
-    if (!entry) continue
-    results.push(...await unpackItem(entry))
-  }
-
-  return results
-}
-
-
-  ////####
-
-
-
+  
   // -- Event Handlers --
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -85,13 +30,10 @@ const unpackItems = async (itemList: DataTransferItem[]): Promise<string[]> => {
     if (event.dataTransfer.items.length === 0) return
     // Process files
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
+    const unpackedFiles: FileSystemEntry[] = await extractFiles(draggedItems, "audio")
 
-
-    const unpackedFiles: string[] = await unpackItems(draggedItems)
-    console.log(unpackedFiles);
+    console.log(unpackedFiles)
     
-    
-
     setDragged(false)
   }
 
