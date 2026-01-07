@@ -6,6 +6,7 @@ import { extractFiles } from '../../utils/fileUploadUtils'
 
 function FileUploadScene() {
   const [dragged, setDragged] = useState<boolean>(false)
+  const [droppedFiles, setDroppedFiles] = useState<FileSystemEntry[]>()
   
   // -- Event Handlers --
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
@@ -30,10 +31,9 @@ function FileUploadScene() {
     if (event.dataTransfer.items.length === 0) return
     // Process files
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
-    const unpackedFiles: FileSystemEntry[] = await extractFiles(draggedItems, "audio")
-
-    console.log(unpackedFiles)
-    
+    // TODO: separate out audio vs other files
+    const droppedAudioFiles: FileSystemEntry[] = await extractFiles(draggedItems, "audio")
+    if (droppedAudioFiles.length > 0){ setDroppedFiles(droppedAudioFiles) }
     setDragged(false)
   }
 
