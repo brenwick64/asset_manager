@@ -2,6 +2,9 @@ declare global {
 	interface Window {
 		db: {
 			list_assets: () => Promise<JSONString>
+		},
+		api: {
+			save_file: (data: string) => void
 		}
 	}
 }

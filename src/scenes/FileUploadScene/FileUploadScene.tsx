@@ -34,6 +34,10 @@ function FileUploadScene() {
     // TODO: separate out audio vs other files
     const droppedAudioFiles: FileSystemEntry[] = await extractFiles(draggedItems, "audio")
     if (droppedAudioFiles.length > 0){ setDroppedFiles(droppedAudioFiles) }
+    
+    window.api.save_file("Hello world!")
+    
+    
     setDragged(false)
   }
 

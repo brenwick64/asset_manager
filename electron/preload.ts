@@ -23,3 +23,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 contextBridge.exposeInMainWorld('db', {
   list_assets: () => ipcRenderer.invoke('assets:list')
 })
+
+contextBridge.exposeInMainWorld('api', {
+  save_file: (data: string) => ipcRenderer.invoke('save-file', data)
+})

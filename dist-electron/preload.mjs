@@ -21,3 +21,6 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
 electron.contextBridge.exposeInMainWorld("db", {
   list_assets: () => electron.ipcRenderer.invoke("assets:list")
 });
+electron.contextBridge.exposeInMainWorld("api", {
+  save_file: (data) => electron.ipcRenderer.invoke("save-file", data)
+});
