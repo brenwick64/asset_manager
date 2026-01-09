@@ -19,8 +19,6 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   }
 });
 electron.contextBridge.exposeInMainWorld("db", {
-  list_assets: () => electron.ipcRenderer.invoke("assets:list")
-});
-electron.contextBridge.exposeInMainWorld("api", {
-  save_file: (data) => electron.ipcRenderer.invoke("save-file", data)
+  get_new_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:get_new", data),
+  save_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:save", data)
 });

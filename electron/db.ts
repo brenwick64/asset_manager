@@ -61,7 +61,7 @@ export async function initDatabase(): Promise<Result<string>> {
 		const sql: string = await getInitSQL()
 		db.exec(sql)
 
-		return { error: null, payload: 'OK' }
+		return { error: null, payload: 'Database initialized successfully at: ' + dbPath }
 	}
 	catch (err) {
 		const error: Error = err instanceof Error ? err : new Error(String(err))

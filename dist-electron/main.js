@@ -62,25 +62,61 @@ async function initDatabase() {
     db = new Database(dbPath);
     const sql = await getInitSQL();
     db.exec(sql);
-    return { error: null, payload: "OK" };
+    return { error: null, payload: "Database initialized successfully at: " + dbPath };
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     return { error, payload: null };
   }
 }
 function registerIPC() {
-  ipcMain.handle("assets:list", () => {
-    const rows = getDatabase().prepare("SELECT * FROM audio_assets").all();
-    return JSON.stringify(rows);
+  ipcMain.handle("audio_assets:get_new", async (event, data) => {
+    const createTempTable = (db22) => {
+      const tempTableName2 = `temp_names_${Date.now()}_${Math.floor(Math.random() * 1e9)}`;
+      db22.exec(`CREATE TABLE ${tempTableName2} (
+						name TEXT PRIMARY KEY
+					);
+			`);
+      return tempTableName2;
+    };
+    const queryNewNames = (db22, nameList, tempTableName2) => {
+      const insert = db22.prepare(`INSERT OR IGNORE INTO ${tempTableName2} (name) VALUES (?)`);
+      for (const name of nameList) {
+        insert.run(name);
+      }
+      const rows = db22.prepare(`
+				SELECT t.name
+				FROM ${tempTableName2} t
+				LEFT JOIN audio_assets a ON a.original_filename = t.name
+				WHERE a.original_filename IS NULL
+			`).all();
+      return rows.map((r) => r.name);
+    };
+    const dropTempTable = (db22, tempTableName2) => {
+      db22.exec(`DROP TABLE IF EXISTS ${tempTableName2}`);
+    };
+    const db2 = getDatabase();
+    if (!db2) throw new Error("DB not initialized");
+    const keyList = data.map((asset) => asset.filename);
+    const tempTableName = createTempTable(db2);
+    const newNames = queryNewNames(db2, keyList, tempTableName);
+    dropTempTable(db2, tempTableName);
+    return data.filter((asset) => {
+      return newNames.includes(asset.filename);
+    });
+  });
+  ipcMain.handle("audio_assets:save", (event, data) => {
+    return { payload: null, error: null };
   });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
-  initDatabase();
-  registerIPC();
-  createWindow();
+  const { payload, error } = await initDatabase();
+  if (!error) {
+    registerIPC();
+    createWindow();
+  }
 });
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {

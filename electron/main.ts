@@ -10,12 +10,13 @@ import { initDatabase } from './db'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-app.whenReady().then(() => {
+app.whenReady().then( async () => {
 	Menu.setApplicationMenu(null) // removes the menu bar (File, Edit, etc.)
-
-	initDatabase()
-	registerIPC()
-	createWindow()	
+	const { payload, error } = await initDatabase()
+	if(!error) {
+		registerIPC()
+		createWindow()
+	}
 })
 
 app.on('window-all-closed', () => {

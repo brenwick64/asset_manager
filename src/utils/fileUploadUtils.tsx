@@ -2,6 +2,11 @@ import { FILE_CATEGORY_MAPPINGS } from "../globals/constants"
 
 
 // Helper functions
+const getFileExtension = (fileName: string) => {
+        const idx: number = fileName.lastIndexOf(".")
+        return idx >= 0 ? fileName.slice(idx + 1).toLowerCase() : ""
+}
+
 const readAllEntries = (dirEntry: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> => {
     const reader: FileSystemDirectoryReader = dirEntry.createReader()
     const entries: FileSystemEntry[] = []
@@ -46,24 +51,31 @@ const unpackEntry = async (entry: FileSystemEntry): Promise<FileSystemEntry[]> =
     return results
 }
 
-const filterEntries = (fileEntries: FileSystemEntry[], fileCategory: FileCategory) => {
-
-    const getEntryExtension = (fileName: string) => {
-        const idx: number = fileName.lastIndexOf(".")
-        return idx >= 0 ? fileName.slice(idx + 1).toLowerCase() : ""
-    }
-
+const filterEntries = (fileEntries: FileSystemEntry[], fileCategory: FileCategory): FileSystemEntry[] => {
     const filteredEntries: FileSystemEntry[] = fileEntries.filter(entry => {
-        const fileExtension: string = getEntryExtension(entry.name)
+        const fileExtension: string = getFileExtension(entry.name)
         return FILE_CATEGORY_MAPPINGS[fileCategory].includes(fileExtension)
     })
 
     return filteredEntries
 }
 
+const convertEntries = (fileEntries: FileSystemEntry[]): AudioAsset[] => {
+    const audioAssets: AudioAsset[] = []
+    for(const entry of fileEntries) {
+        audioAssets.push({
+            filename: entry.name,
+            file_extension: getFileExtension(entry.name),
+            content_type: 'audio',
+            storage_uri: entry.fullPath
+        })
+    }
+    return audioAssets
+}
+
 
 // Public Utils
-export const extractFiles = async (itemList: DataTransferItem[], FileCategory?: FileCategory): Promise<FileSystemEntry[]> => {
+export const extractFiles = async (itemList: DataTransferItem[], FileCategory?: FileCategory): Promise<AudioAsset[]> => {
     const results: FileSystemEntry[] = []
 
     for (const item of itemList) {
@@ -72,6 +84,10 @@ export const extractFiles = async (itemList: DataTransferItem[], FileCategory?: 
         results.push(...await unpackEntry(entry))
     }
 
-    if (FileCategory){ return filterEntries(results, FileCategory) }
-    else{ return results }
+    if (FileCategory){ 
+        const filteredEntries: FileSystemEntry[] = filterEntries(results, FileCategory) 
+        const audioAssets: AudioAsset[] = convertEntries(filteredEntries)
+        return audioAssets
+    }
+    else{ return [] }
 }

@@ -6,7 +6,6 @@ import { extractFiles } from '../../utils/fileUploadUtils'
 
 function FileUploadScene() {
   const [dragged, setDragged] = useState<boolean>(false)
-  const [droppedFiles, setDroppedFiles] = useState<FileSystemEntry[]>()
   
   // -- Event Handlers --
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
@@ -31,13 +30,18 @@ function FileUploadScene() {
     if (event.dataTransfer.items.length === 0) return
     // Process files
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
-    // TODO: separate out audio vs other files
-    const droppedAudioFiles: FileSystemEntry[] = await extractFiles(draggedItems, "audio")
-    if (droppedAudioFiles.length > 0){ setDroppedFiles(droppedAudioFiles) }
-    
-    window.api.save_file("Hello world!")
-    
-    
+    // Separate out Audio Files
+    const droppedAudioAssets: AudioAsset[] = await extractFiles(draggedItems, "audio")
+    if (droppedAudioAssets.length > 0){ 
+      console.log(droppedAudioAssets)
+      // Separate out duplicate files
+      const newAssetsList: AudioAsset[] = await window.db.get_new_audio_assets(droppedAudioAssets)
+      console.log(newAssetsList)
+
+      //TODO: Save to DB
+
+      //TODO: Save to File
+    }
     setDragged(false)
   }
 

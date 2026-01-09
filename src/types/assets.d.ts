@@ -1,4 +1,11 @@
 interface AudioAsset {
+    filename: string;
+    content_type: string;
+    file_extension: string;
+    storage_uri: string;
+}
+
+interface DBAudioAsset {
     uuid: string;
     content_type: string;
     file_extension: string;
