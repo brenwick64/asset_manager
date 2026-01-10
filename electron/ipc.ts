@@ -34,7 +34,7 @@ export function registerIPC(): void {
 			db.exec(`DROP TABLE IF EXISTS ${tempTableName}`)
 		}
 
-		const db = getDatabase()
+		const db: Database = getDatabase()
 		if (!db) throw new Error('DB not initialized')
 
 		const keyList: string[] = data.map((asset: AudioAsset) => asset.filename)
@@ -49,8 +49,41 @@ export function registerIPC(): void {
 	})
 
 	// TODO
-	ipcMain.handle('audio_assets:save', (event, data): Result<null> => {
-		return { payload: null, error: null }
+	ipcMain.handle('audio_assets:save_db', (event, data): Result<unknown> => {
+		let insertCount: number = 0
+		let rejectCount: number = 0
+		try{
+			const db: Database = getDatabase()
+			if (!db) throw new Error('DB not initialized')
+	
+			const insertStmt = db.prepare(`
+				INSERT INTO AUDIO_ASSETS(
+					original_filename,
+					content_type,
+					file_extension,
+					storage_uri
+				)
+				VALUES(
+					@filename,
+					@content_type,
+					@file_extension,
+					@storage_uri
+				)
+			`)
+	
+			const insertMany = db.transaction((assets: AudioAsset[]) => {
+				for (const asset of assets) {
+					const response = insertStmt.run(asset)					
+					if(response) { insertCount += 1 } 
+					else{ rejectCount += 1 }
+				}
+			})
+			insertMany(data)
+			return { payload: { inserted: insertCount, rejected: rejectCount }, error: null }
+		}
+		catch(err) {
+			return { payload: null, error: err instanceof Error ? err : Error('Error') }
+		}
 	})
 
 }

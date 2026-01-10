@@ -2,7 +2,7 @@ declare global {
 	interface Window {
 		db: {
 			get_new_audio_assets: (audioAssets: AudioAsset[]) => Promise<AudioAsset[]>
-			save_audio_assets: (fileEntries: JSONString) => Promise<Result>
+			save_audio_assets: (fileEntries: AudioAsset[]) => Promise<Result>
 		}
 	}
 }

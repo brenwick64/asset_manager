@@ -20,5 +20,5 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
 });
 electron.contextBridge.exposeInMainWorld("db", {
   get_new_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:get_new", data),
-  save_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:save", data)
+  save_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:save_db", data)
 });

@@ -32,11 +32,16 @@ function FileUploadScene() {
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
     // Separate out Audio Files
     const droppedAudioAssets: AudioAsset[] = await extractFiles(draggedItems, "audio")
-    if (droppedAudioAssets.length > 0){ 
-      console.log(droppedAudioAssets)
+    if (droppedAudioAssets.length > 0){
+      console.log(droppedAudioAssets.length + " audio files dropped")
       // Separate out duplicate files
       const newAssetsList: AudioAsset[] = await window.db.get_new_audio_assets(droppedAudioAssets)
-      console.log(newAssetsList)
+      console.log(newAssetsList.length + " new records")
+
+      const test = await window.db.save_audio_assets(newAssetsList)
+      const { inserted, rejected } = test.payload
+      console.log(inserted + " inserts")
+      console.log(rejected + " rejects")
 
       //TODO: Save to DB
 

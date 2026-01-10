@@ -1,6 +1,15 @@
 CREATE TABLE IF NOT EXISTS audio_assets (
-	uuid TEXT PRIMARY KEY,
-
+	uuid TEXT PRIMARY KEY
+		DEFAULT (
+			lower(
+                hex(randomblob(4)) || '-' ||
+                hex(randomblob(2)) || '-4' ||
+                substr(hex(randomblob(2)), 2) || '-' ||
+                substr('89ab', abs(random()) % 4 + 1, 1) ||
+                substr(hex(randomblob(2)), 2) || '-' ||
+                hex(randomblob(6))
+			)
+		) NOT NULL,
 	content_type TEXT NOT NULL,
     file_extension TEXT NOT NULL,
 	original_filename TEXT NOT NULL,

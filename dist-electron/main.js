@@ -104,8 +104,41 @@ function registerIPC() {
       return newNames.includes(asset.filename);
     });
   });
-  ipcMain.handle("audio_assets:save", (event, data) => {
-    return { payload: null, error: null };
+  ipcMain.handle("audio_assets:save_db", (event, data) => {
+    let insertCount = 0;
+    let rejectCount = 0;
+    try {
+      const db2 = getDatabase();
+      if (!db2) throw new Error("DB not initialized");
+      const insertStmt = db2.prepare(`
+				INSERT INTO AUDIO_ASSETS(
+					original_filename,
+					content_type,
+					file_extension,
+					storage_uri
+				)
+				VALUES(
+					@filename,
+					@content_type,
+					@file_extension,
+					@storage_uri
+				)
+			`);
+      const insertMany = db2.transaction((assets) => {
+        for (const asset of assets) {
+          const response = insertStmt.run(asset);
+          if (response) {
+            insertCount += 1;
+          } else {
+            rejectCount += 1;
+          }
+        }
+      });
+      insertMany(data);
+      return { payload: { inserted: insertCount, rejected: rejectCount }, error: null };
+    } catch (err) {
+      return { payload: null, error: err instanceof Error ? err : Error("Error") };
+    }
   });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
