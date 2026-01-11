@@ -1,5 +1,8 @@
 declare global {
 	interface Window {
+		asset_paths: {
+			get_file_url: (absoluteRoot: string, relative: string) => Promise<string>
+		},
 		db: {
 			get_new_audio_assets: (audioAssets: AudioAsset[]) => Promise<AudioAsset[]>
 			save_audio_assets: (fileEntries: AudioAsset[]) => Promise<Result>

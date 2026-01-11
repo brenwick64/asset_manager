@@ -12,8 +12,9 @@ export function createWindow(): BrowserWindow {
 		height: 900,
 		webPreferences: {
 			preload: path.join(__dirname, 'preload.mjs'),
-			contextIsolation: true,
+			contextIsolation: true		
 		}
+
 	})
 
 	if (VITE_DEV_SERVER_URL) {

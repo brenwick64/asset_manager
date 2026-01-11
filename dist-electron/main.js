@@ -1,6 +1,6 @@
 import path from "node:path";
-import { BrowserWindow, app, ipcMain, Menu } from "electron";
-import { fileURLToPath } from "node:url";
+import { BrowserWindow, app, ipcMain, protocol, net, Menu } from "electron";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import fs from "fs/promises";
 import { createRequire } from "node:module";
 const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
@@ -140,10 +140,27 @@ function registerIPC() {
       return { payload: null, error: err instanceof Error ? err : Error("Error") };
     }
   });
+  ipcMain.handle("file:test", (event, data) => {
+    console.log(pathToFileURL(data).toString());
+    return pathToFileURL(data).toString();
+  });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
+protocol.registerSchemesAsPrivileged([
+  // Create a custom protocol to allow for file exchange via network protocols (not disk) (outside of chromium runtime)
+  { scheme: "asset", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
+]);
 app.whenReady().then(async () => {
+  protocol.handle("asset", async (request) => {
+    const u = new URL(request.url);
+    const LIB_ROOT = "C:\\Users\\brenw\\Desktop\\coins_audio";
+    const rel = decodeURIComponent(`${u.hostname}${u.pathname}`).replace(/^\/+/, "");
+    const full = path.join(LIB_ROOT, rel);
+    const seggs = await pathToFileURL(full).toString();
+    console.log(seggs);
+    return net.fetch(pathToFileURL(full).toString());
+  });
   Menu.setApplicationMenu(null);
   const { payload, error } = await initDatabase();
   if (!error) {

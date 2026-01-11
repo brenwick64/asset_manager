@@ -2,7 +2,8 @@ interface AudioAsset {
     filename: string;
     content_type: string;
     file_extension: string;
-    storage_uri: string;
+    absolute_path: string,
+    relative_path: string;
 }
 
 interface DBAudioAsset {

@@ -2,6 +2,18 @@ import { FILE_CATEGORY_MAPPINGS } from "../globals/constants"
 
 
 // Helper functions
+const normalizeAbsolutePath = (path: string): string => {
+    const normalizedPath: string = path.replace(/\\/g, "/")
+    // Remove the last directory, since its included in the relative path
+    const lastSlashIndex: number = normalizedPath.lastIndexOf("/")
+    return lastSlashIndex === -1 ? normalizedPath : normalizedPath.slice(0, lastSlashIndex)
+}
+
+const getFileName = (fileName: string) => {
+    const lastDotIndex: number = fileName.lastIndexOf(".")
+    return lastDotIndex === -1 ? fileName : fileName.slice(0, lastDotIndex)
+}
+
 const getFileExtension = (fileName: string) => {
         const idx: number = fileName.lastIndexOf(".")
         return idx >= 0 ? fileName.slice(idx + 1).toLowerCase() : ""
@@ -60,14 +72,15 @@ const filterEntries = (fileEntries: FileSystemEntry[], fileCategory: FileCategor
     return filteredEntries
 }
 
-const convertEntries = (fileEntries: FileSystemEntry[]): AudioAsset[] => {
+const convertEntries = (absolutePath: string, fileEntries: FileSystemEntry[]): AudioAsset[] => {
     const audioAssets: AudioAsset[] = []
     for(const entry of fileEntries) {
         audioAssets.push({
-            filename: entry.name,
+            filename: getFileName(entry.name),
             file_extension: getFileExtension(entry.name),
             content_type: 'audio',
-            storage_uri: entry.fullPath
+            absolute_path: normalizeAbsolutePath(absolutePath),
+            relative_path: entry.fullPath
         })
     }
     return audioAssets
@@ -75,7 +88,13 @@ const convertEntries = (fileEntries: FileSystemEntry[]): AudioAsset[] => {
 
 
 // Public Utils
-export const extractFiles = async (itemList: DataTransferItem[], FileCategory?: FileCategory): Promise<AudioAsset[]> => {
+export const extractPath = (fileList: FileList): string | null => {
+    if(fileList.length === 0) return null
+    const absolutePath: string = fileList[0].path
+    return absolutePath
+}
+
+export const extractFiles = async (absolutePath: string, itemList: DataTransferItem[], FileCategory?: FileCategory): Promise<AudioAsset[]> => {
     const results: FileSystemEntry[] = []
 
     for (const item of itemList) {
@@ -86,7 +105,7 @@ export const extractFiles = async (itemList: DataTransferItem[], FileCategory?: 
 
     if (FileCategory){ 
         const filteredEntries: FileSystemEntry[] = filterEntries(results, FileCategory) 
-        const audioAssets: AudioAsset[] = convertEntries(filteredEntries)
+        const audioAssets: AudioAsset[] = convertEntries(absolutePath, filteredEntries)
         return audioAssets
     }
     else{ return [] }

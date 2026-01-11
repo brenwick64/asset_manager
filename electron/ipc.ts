@@ -1,4 +1,5 @@
 import type { Database } from 'better-sqlite3'
+import { pathToFileURL } from "node:url"
 import { ipcMain } from 'electron'
 import { getDatabase } from './db'
 
@@ -48,7 +49,6 @@ export function registerIPC(): void {
 		})
 	})
 
-	// TODO
 	ipcMain.handle('audio_assets:save_db', (event, data): Result<unknown> => {
 		let insertCount: number = 0
 		let rejectCount: number = 0
@@ -86,4 +86,8 @@ export function registerIPC(): void {
 		}
 	})
 
+	ipcMain.handle('file:test', (event, data): string => {
+		console.log(pathToFileURL(data).toString());
+		return pathToFileURL(data).toString()
+	})
 }
