@@ -11,3 +11,23 @@ body {
   line-height: 1.6;
 }
 
+/* Completely remove native button styling */
+.button-reset,
+button.button-reset {
+  all: unset;              /* removes *everything* (borders, fonts, padding, etc) */
+  display: inline-flex;    /* restores layout ability */
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Remove browser focus ring but keep accessibility control */
+.button-reset:focus {
+  outline: none;
+}
+
+/* Prevent Firefox dotted focus border */
+.button-reset::-moz-focus-inner {
+  border: 0;
+}

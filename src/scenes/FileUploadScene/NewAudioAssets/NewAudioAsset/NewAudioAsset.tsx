@@ -7,36 +7,43 @@ type Props = {
 }
 
 function NewAudioAsset({ asset }: Props) {
+  const audioRef: React.MutableRefObject<HTMLAudioElement | null> = useRef(null)
   const [src, setSrc] = useState<string>()
+  const [audioLoaded, setAudioLoaded] = useState<boolean>(false)
+
+  const handleAudioLoaded = () => {
+    setAudioLoaded(true)
+  }
 
   useEffect(() => {
-
     const loadSrc = async () => {
       try {
-        const fileURL: string = `asset:///${asset.absolute_path}${asset.relative_path}`
-        console.log('fileURL in NewAudioAsset: ' + fileURL);
-        
-        // const fileSrc: string = await window.asset_paths.get_file_url(asset.absolute_path, asset.relative_path)
+        const fileURL: string = `asset:///asset?rel=${asset.relative_path}&abs=${asset.absolute_path}`        
         setSrc(fileURL)
       }
       catch (err) {
-        console.error("Failed to resolve audio path", err)
+        console.error("Failed to resolve audio path:", err)
       }
     }
+
     loadSrc()    
     
   }, [asset.absolute_path, asset.relative_path])
 
-
+  // TODO: make this more elegant
   if(!src){ return <div>LOADING</div>}
 
   return (
-        <div className='new-audio-asset'>
-        {/* <audio controls src='asset:///Coins/Loops/Coin%20Counter%20Loop%2001.wav' /> */}
-        <audio controls src={src} />
-        {asset.filename}
-        {/* <AudioControls /> */}
-    </div>
+      <div className='new-audio-asset'>
+        <div className='new-audio-asset-left'>
+          <input type='checkbox' />
+          <audio ref={audioRef} src={src} onLoadedData={handleAudioLoaded} />
+          {asset.filename}
+        </div>
+        <div className='new-audio-asset-right'>
+          <AudioControls audioRef={audioRef} audioLoaded={audioLoaded} />
+        </div>
+      </div>
   )
 }
 

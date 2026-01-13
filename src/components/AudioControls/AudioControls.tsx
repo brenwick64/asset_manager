@@ -18,7 +18,7 @@ function AudioControls({ audioRef, audioLoaded }: { audioRef: React.RefObject<HT
 		<div className="audio-loading-overlay">Loading...</div>
 	)
 
-	return (audioLoaded && audioRef.current) ? controls : loading
+	return audioLoaded ? controls : loading
 }
 
 export default AudioControls

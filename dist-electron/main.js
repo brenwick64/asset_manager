@@ -153,12 +153,11 @@ protocol.registerSchemesAsPrivileged([
 ]);
 app.whenReady().then(async () => {
   protocol.handle("asset", async (request) => {
-    const u = new URL(request.url);
-    const LIB_ROOT = "C:\\Users\\brenw\\Desktop\\coins_audio";
-    const rel = decodeURIComponent(`${u.hostname}${u.pathname}`).replace(/^\/+/, "");
-    const full = path.join(LIB_ROOT, rel);
-    const seggs = await pathToFileURL(full).toString();
-    console.log(seggs);
+    const url = new URL(request.url);
+    const abs = url.searchParams.get("abs");
+    const rel = url.searchParams.get("rel");
+    if (!abs || !rel) return new Response("Missing either abs or rel params in URL", { status: 400 });
+    const full = path.join(abs, rel);
     return net.fetch(pathToFileURL(full).toString());
   });
   Menu.setApplicationMenu(null);

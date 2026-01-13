@@ -18,16 +18,16 @@ protocol.registerSchemesAsPrivileged([
 app.whenReady().then( async () => {
 
   // This tells Electron to reroute all asset:// calls to this process handler
-  protocol.handle("asset", async (request) => {
-	const u = new URL(request.url)
-	const LIB_ROOT = "C:\\Users\\brenw\\Desktop\\coins_audio"
-    const rel = decodeURIComponent(`${u.hostname}${u.pathname}`).replace(/^\/+/, "")
-    const full = path.join(LIB_ROOT, rel)
+  protocol.handle("asset", async (request) => {	
+	const url: URL = new URL(request.url)
+	// Extract root URL
+	const abs: string | null = url.searchParams.get("abs")
+	const rel: string | null = url.searchParams.get("rel")
+	if (!abs || !rel) return new Response("Missing either abs or rel params in URL", { status: 400 })
+	// Construct full file URL
+	const full: string = path.join(abs, rel)
 
     // IMPORTANT: use Electron net.fetch, not global fetch	
-	const seggs = await pathToFileURL(full).toString()
-	console.log(seggs)
-	
     return net.fetch(pathToFileURL(full).toString())
   })
 
