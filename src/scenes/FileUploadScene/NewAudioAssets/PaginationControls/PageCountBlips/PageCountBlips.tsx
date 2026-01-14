@@ -3,9 +3,10 @@ import './PageCountBlips.css'
 type Props = {
   currentPage: number
   totalPages: number
+  setPageNumber: (num: number) => void
 }
 
-function PageCountBlips({ currentPage, totalPages }: Props) {
+function PageCountBlips({ currentPage, totalPages, setPageNumber }: Props) {
   return (
     <div className="page-count-blips">
       {Array.from({ length: totalPages }, (_, i) => {
@@ -13,7 +14,11 @@ function PageCountBlips({ currentPage, totalPages }: Props) {
         const isActive: boolean = page === currentPage
 
         return (
-          <div key={page} className={`blip${isActive ? " blip-active" : ""}`} />
+          <div 
+            key={page} 
+            className={`blip${isActive ? " blip-active" : ""}`} 
+            onClick={() => setPageNumber(page)}
+          />
         )
       })}
     </div>

@@ -1,37 +1,34 @@
 import './PaginationControls.css'
-import { useState } from 'react'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { PaginationControllerType } from '../../../../hooks/usePaginateAssets'
 import PageCountBlips from './PageCountBlips/PageCountBlips'
 
-function PaginationControls({ controller } : { controller: PaginationControllerType }) {
-  const [currentPage, setCurrentPage] = useState<number>(1)  
-
+function PaginationControls({ controller } : { controller: PaginationControllerType }) {  
+  
   const handlePageLeft = (): void => {
-    if(controller.isLeftBoundary) return 
     controller.previousPage()
-    setCurrentPage(currentPage => currentPage - 1)
   }
-    const handlePageRight = (): void => {
-    if(controller.isRightBoundary) return 
-    controller.nextPage()
-    setCurrentPage(currentPage => currentPage + 1)
+  
+  const handlePageRight = (): void => {
+      controller.nextPage()
   }
 
   return (
     <div className='pagination-controls'>
       <button 
-        className='button-reset'
+        className='button-reset pagination-btn'
         onClick={handlePageLeft}
+        disabled={controller.isLeftBoundary}
       >
-        <FaChevronLeft/>
+        <FaChevronLeft size={24} />
       </button>
-      <PageCountBlips currentPage={currentPage} totalPages={controller.numPages} />
+      <PageCountBlips currentPage={controller.currentPage} totalPages={controller.totalPages} setPageNumber={controller.setPageNumber} />
       <button 
-        className='button-reset'
+        className='button-reset pagination-btn'
         onClick={handlePageRight}
+        disabled={controller.isRightBoundary}
       >
-        <FaChevronRight />
+        <FaChevronRight size={24} />
       </button>
     </div>
   )

@@ -1,4 +1,5 @@
 interface AudioAsset {
+    is_checked: boolean;
     filename: string;
     content_type: string;
     file_extension: string;

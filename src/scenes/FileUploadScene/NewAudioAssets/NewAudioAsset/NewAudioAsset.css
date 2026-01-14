@@ -1,5 +1,4 @@
 .new-audio-asset {
-    outline: solid 1px red;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -11,4 +10,8 @@
 .new-audio-asset-left {
     display: flex;
     gap: 0.5rem;
+}
+
+.hidden {
+    display: none;
 }

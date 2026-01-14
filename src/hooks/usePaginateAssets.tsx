@@ -1,39 +1,51 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { range } from "../utils/arrayUtils"
 
 export type PaginationControllerType = {
     previousPage: () => void
     nextPage: () => void
+    setPageNumber: (num: number) => void
     resetPage: () => void
-    page: number
-    numPages: number
+    currentPage: number
+    totalPages: number
     isLeftBoundary: boolean,
-    isRightBoundary: boolean
+    isRightBoundary: boolean,
+    visibleIndexes: number[]
 }
 
 export const usePaginateAssets = (data: any, maxRowsPerPage: number)=> {
-    const [page, setPage] = useState(1)
+    const [currentPage, setCurrentPage] = useState(1)
 
     // State to pass to Components
-    const numPages = Math.ceil(data.length / maxRowsPerPage)
-    const isLeftBoundary = page === 1
-    const isRightBoundary = page === numPages
+    const totalPages: number = Math.ceil(data.length / maxRowsPerPage)
+    const isLeftBoundary: boolean = currentPage === 1
+    const isRightBoundary: boolean = currentPage === totalPages
+
+    const visibleIndexes: number[] = useMemo(() => {
+        const start: number = (currentPage - 1) * maxRowsPerPage
+        const end: number = Math.min(start + maxRowsPerPage - 1, data.length - 1)
+        if (data.length === 0 || end < start) return []
+        return range(start, end)
+    }, [currentPage, maxRowsPerPage, data.length])
+
 
     // State Mutators
-    const nextPage = () => {
-        setPage((currentPage) => Math.min(currentPage + 1, numPages))
+    const nextPage = (): void => {
+        setCurrentPage((currentPage) => Math.min(currentPage + 1, totalPages))
     }
 
-    const previousPage = () => {
-        setPage((currentPage) => Math.max(currentPage - 1, 1))
+    const previousPage = (): void => {
+        setCurrentPage((currentPage) => Math.max(currentPage - 1, 1))
     }
 
-    const resetPage = () => {
-        setPage(1)
+    const setPageNumber = (num: number): void => {
+        setCurrentPage(num)
     }
 
-    const paginationData = data.slice((page - 1) * maxRowsPerPage, page * maxRowsPerPage)
+    const resetPage = (): void => {
+        setCurrentPage(1)
+    }
 
-    return { paginationData: paginationData, paginationController:  { previousPage, nextPage, resetPage, page, numPages, isLeftBoundary, isRightBoundary } }
+    return { paginationController:  { previousPage, nextPage, setPageNumber, resetPage, currentPage, totalPages, isLeftBoundary, isRightBoundary, visibleIndexes } }
 }

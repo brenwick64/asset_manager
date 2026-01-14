@@ -53,7 +53,7 @@ function FileUploadScene() {
       const newAssetsList: AudioAsset[] = await window.db.get_new_audio_assets(droppedAudioAssets)
       console.log(newAssetsList.length + " new records")
       setDroppedAssets(newAssetsList)
-      console.log("assets dropped:");
+      console.log("assets dropped:")
       console.log(newAssetsList)
       
     }
