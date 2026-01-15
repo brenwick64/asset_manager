@@ -7,15 +7,15 @@ type Props = {
     index: number
     visibleIndexes: number[]
     onAssetChecked: (filename: string) => void
+    onAssetLoaded: () => void
 }
 
-function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked }: Props) {
+function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLoaded }: Props) {
   const audioRef: React.MutableRefObject<HTMLAudioElement | null> = useRef(null)
   const [src, setSrc] = useState<string>()
-  const [audioLoaded, setAudioLoaded] = useState<boolean>(false)
 
   const handleAudioLoaded = () => {
-    setAudioLoaded(true)
+    onAssetLoaded()
   }
 
   useEffect(() => {
@@ -45,7 +45,7 @@ function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked }: Props) 
           {asset.filename}
         </div>
         <div className='new-audio-asset-right'>
-          <AudioControls audioRef={audioRef} audioLoaded={audioLoaded} />
+          <AudioControls audioRef={audioRef} />
         </div>
       </div>
   )
