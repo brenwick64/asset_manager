@@ -24,16 +24,19 @@ function normalizeAssets(assets: AudioAsset[]): NewAudioAsset[] {
 }
 
 function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: Props) {
-    //TODO: turn this into a saved cache
-    const DEBUG_TAGS = ['duck', 'quack', 'bird', 'bird_call']
-
     const [newAssets, setNewAssets] = useState<NewAudioAsset[]>(normalizeAssets(assets))
+    const [tags, setTags] = useState<string[]>([])
     const { paginationController } = usePaginateAssets(newAssets, MAX_ASSETS_PER_PAGE)
-    const [tags, setTags] = useState<string[]>(DEBUG_TAGS)
     
     let assetsLoadedCount: number = 0
 
     useEffect(() => {
+        const loadTags = async (): Promise<void> => {
+            const result: string[] = await window.local_storage.get_audio_tags()            
+            setTags(result)
+        }
+
+        loadTags()
         setNewAssets(normalizeAssets(assets))
     }, [assets])
 
@@ -65,10 +68,16 @@ function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: P
         }
     }
 
+    // Tags event handlers
+    const onTagsUpdated = async (updatedTags: string[]): Promise<Result<unknown>> => {
+        const result = await window.local_storage.set_audio_tags(updatedTags)
+        return result
+    }
+
 
     return (
         <div className={assetsLoaded ? 'scene' : 'hidden'}>
-            <TagsManager tags={tags} setTags={setTags} />
+            <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} />
             <div className='new-audio-assets'>
                 <div className='audio-asset-header'>
                     <div className='audio-asset-header-left'>

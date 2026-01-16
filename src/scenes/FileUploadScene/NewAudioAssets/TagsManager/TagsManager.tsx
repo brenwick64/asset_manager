@@ -6,9 +6,10 @@ import Tag from './Tag/Tag'
 type Props = {
   tags: string[]
   setTags: React.Dispatch<React.SetStateAction<string[]>>
+  onTagsUpdated: (tags: string[]) => Promise<Result<unknown>>
 }
 
-function TagsManager({ tags, setTags }: Props) {
+function TagsManager({ tags, setTags, onTagsUpdated }: Props) {
   const [input, setInput] = useState<string>("")
 
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,13 +25,19 @@ function TagsManager({ tags, setTags }: Props) {
 
   const addTag = (tagName: string): void => {
     if(!input){ return }
-    setTags(prev => [...prev, tagName])
+    setTags((prev: string[]) => {
+      const next: string[] = [...prev, tagName]
+      void onTagsUpdated(next)
+      return next
+    })
     setInput("")
   }
 
   const removeTag = (tagName: string): void => {
-    setTags(prev => {
-      return prev.filter((tag: string) => { return tag !== tagName })
+    setTags((prev: string[]) => {
+      const next: string[] = prev.filter((tag: string) => { return tag !== tagName })
+      void onTagsUpdated(next)
+      return next
     })
   }
 

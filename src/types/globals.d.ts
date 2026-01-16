@@ -6,6 +6,10 @@ declare global {
 		db: {
 			get_new_audio_assets: (audioAssets: AudioAsset[]) => Promise<AudioAsset[]>
 			save_audio_assets: (fileEntries: AudioAsset[]) => Promise<Result>
+		},
+		local_storage: {
+			get_audio_tags: () => Promise<string[]>
+			set_audio_tags: (tags: string[]) => Promise<Result>
 		}
 	}
 }

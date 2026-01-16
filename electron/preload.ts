@@ -28,3 +28,8 @@ contextBridge.exposeInMainWorld('db', {
 contextBridge.exposeInMainWorld('asset_paths', {
   get_file_url: (absolute: string, relative: string) => ipcRenderer.invoke('file:test', absolute + relative)
 })
+
+contextBridge.exposeInMainWorld('local_storage', {
+  get_audio_tags: () => ipcRenderer.invoke('file:get_audio_tags'),
+  set_audio_tags: (tags: string[]) => ipcRenderer.invoke('file:set_audio_tags', tags)
+})

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { BrowserWindow, app, ipcMain, protocol, net, Menu } from "electron";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import fs$1 from "node:fs";
 import fs from "fs/promises";
 import { createRequire } from "node:module";
 const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
@@ -138,6 +139,43 @@ function registerIPC() {
       return { payload: { inserted: insertCount, rejected: rejectCount }, error: null };
     } catch (err) {
       return { payload: null, error: err instanceof Error ? err : Error("Error") };
+    }
+  });
+  ipcMain.handle("file:get_audio_tags", (event, data) => {
+    const audioTagsPath = path.join(
+      process.env.APP_ROOT,
+      "assets",
+      "tags",
+      "audio_tags.json"
+    );
+    console.log(audioTagsPath);
+    if (!fs$1.existsSync(audioTagsPath)) return [];
+    const raw = fs$1.readFileSync(audioTagsPath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.tags) ? parsed.tags : [];
+  });
+  ipcMain.handle("file:set_audio_tags", (event, data) => {
+    const audioTagsPath = path.join(
+      process.env.APP_ROOT,
+      "assets",
+      "tags",
+      "audio_tags.json"
+    );
+    if (!Array.isArray(data)) {
+      return { payload: null, error: new Error("Tags payload must be an array") };
+    }
+    if (!data.every((t) => typeof t === "string")) {
+      return { payload: null, error: new Error("All tags must be strings") };
+    }
+    const tags = [...new Set(
+      data.map((t) => t.trim()).filter(Boolean)
+    )];
+    try {
+      fs$1.mkdirSync(path.dirname(audioTagsPath) ? path.dirname(audioTagsPath) : audioTagsPath.replace(/\/[^/]+$/, ""), { recursive: true });
+      fs$1.writeFileSync(audioTagsPath, JSON.stringify({ tags }, null, 2), "utf-8");
+      return { payload: "Ok", error: null };
+    } catch (err) {
+      return { payload: null, error: err instanceof Error ? err : new Error("Failed to write tags") };
     }
   });
   ipcMain.handle("file:test", (event, data) => {
