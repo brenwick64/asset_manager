@@ -6,10 +6,18 @@ import FileDrop from './FileDrop/FileDrop'
 import NewAudioAssets from './NewAudioAssets/NewAudioAssets'
 
 function FileUploadScene() {
-  const [loading, setLoading] = useState<boolean>(false)
   const [dragged, setDragged] = useState<boolean>(false)
-  const [droppedAssets, setDroppedAssets] = useState<AudioAsset[]>()
+  const [audioFilesDropped, setAudioFilesDropped] = useState<boolean>(false)
+  const [assetsLoaded, setAssetsLoaded] = useState<boolean>(false)
+  const [droppedAssets, setDroppedAssets] = useState<AudioAsset[]>([])
   
+  const resetScene = () => {
+    setDragged(false)
+    setAudioFilesDropped(false)
+    setAssetsLoaded(false)
+    setDroppedAssets([])
+  }
+
   // -- Event Handlers --
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -30,10 +38,12 @@ function FileUploadScene() {
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
-    
     setDragged(false)
-    setLoading(true)
+
     if (event.dataTransfer.items.length === 0) return
+
+    setAudioFilesDropped(true) // Start Loader
+
     // Process files
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
     
@@ -45,8 +55,13 @@ function FileUploadScene() {
 
     const droppedAudioAssets: AudioAsset[] = await extractFiles(absolutePath, draggedItems, "audio")
 
-    console.log("absPath: " + absolutePath)
+    // TODO: Toast this
+    if(droppedAudioAssets.length <= 0){ 
+      setAudioFilesDropped(false)
+      return
+    }
 
+    console.log("absPath: " + absolutePath)
     if (absolutePath && droppedAudioAssets.length > 0){ //TODO: Guard clauses for split error handling
       console.log(droppedAudioAssets.length + " audio files dropped")
       // Separate out duplicate files
@@ -60,19 +75,19 @@ function FileUploadScene() {
     else {
       //TODO: Toast notification?
     }
-    setLoading(false)
   }
 
   // Rendering Logic
-  if(loading){ 
-    return <Loader />
-  } 
-  else if(droppedAssets && droppedAssets.length > 0){ 
-    return <NewAudioAssets assets={droppedAssets} />
-  } 
-  else {
-    return <FileDrop dragged={dragged} handleDragEnter={handleDragEnter} handleDragOver={handleDragOver} handleDragLeave={handleDragLeave} handleDrop={handleDrop} /> 
-  }
+if(!audioFilesDropped) {
+  return <FileDrop dragged={dragged} handleDragEnter={handleDragEnter} handleDragOver={handleDragOver} handleDragLeave={handleDragLeave} handleDrop={handleDrop} /> 
+}
+
+return (
+  <>
+    {!assetsLoaded && <Loader />}
+    <NewAudioAssets assets={droppedAssets} assetsLoaded={assetsLoaded} setAssetsLoaded={setAssetsLoaded} resetScene={resetScene} />
+  </>
+)
 }
 
 export default FileUploadScene

@@ -1,5 +1,4 @@
 interface AudioAsset {
-    is_checked: boolean;
     filename: string;
     content_type: string;
     file_extension: string;
@@ -7,12 +6,13 @@ interface AudioAsset {
     relative_path: string;
 }
 
-interface DBAudioAsset {
+interface NewAudioAsset extends AudioAsset {
+    is_checked: boolean;
+    tags: string[];
+}
+
+interface DBAudioAsset extends AudioAsset {
     uuid: string;
-    content_type: string;
-    file_extension: string;
-    original_filename: string;
-    storage_uri: string;
     created_date_utc: string;
     last_modified_date_utc: string;
 }

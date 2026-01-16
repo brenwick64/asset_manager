@@ -16,7 +16,7 @@ function PaginationControls({ controller } : { controller: PaginationControllerT
   return (
     <div className='pagination-controls'>
       <button 
-        className='button-reset pagination-btn'
+        className='pagination-btn'
         onClick={handlePageLeft}
         disabled={controller.isLeftBoundary}
       >
@@ -24,7 +24,7 @@ function PaginationControls({ controller } : { controller: PaginationControllerT
       </button>
       <PageCountBlips currentPage={controller.currentPage} totalPages={controller.totalPages} setPageNumber={controller.setPageNumber} />
       <button 
-        className='button-reset pagination-btn'
+        className='pagination-btn'
         onClick={handlePageRight}
         disabled={controller.isRightBoundary}
       >
