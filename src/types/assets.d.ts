@@ -8,7 +8,7 @@ interface AudioAsset {
 
 interface NewAudioAsset extends AudioAsset {
     is_checked: boolean;
-    tags: string[];
+    json_tags: string;
 }
 
 interface DBAudioAsset extends AudioAsset {

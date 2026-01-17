@@ -1,23 +1,15 @@
 .tags-manager {
     width: 100%;
     height: 10rem;
-    padding: 1rem 0rem;
+    padding: 1rem;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    /* justify-content: flex-start; */
+    align-items: flex-start;
     flex-direction: column;
-    gap: 0.5rem;
 }
 
 .tags {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.tag-input-container {
-    width: 40%;
+    width: 100%;
     height: 100%;
     display: flex;
     justify-content: center;
@@ -25,13 +17,31 @@
     gap: 0.25rem;
 }
 
+.tag-input-container {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .tag-input {
   height: 2rem;
+  width: 20rem;
   padding: 0 0.5rem;
   font-size: 0.9rem;
   color: #1e1e1e;
   background-color: #eee;
-  border-radius: 6px;
+}
+
+.tag-input-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
 }
 
 .add-tag-btn {
@@ -41,8 +51,9 @@
     justify-content: center;
     align-items: center;
     background-color: #7fffd4;
-    border-radius: 50%;
-    transition:
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+        transition:
         background-color 120ms ease,
         transform 80ms ease;
 }

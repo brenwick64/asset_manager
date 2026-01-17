@@ -26,8 +26,8 @@ export function registerIPC(): void {
 			const rows = db.prepare(`
 				SELECT t.name
 				FROM ${tempTableName} t
-				LEFT JOIN audio_assets a ON a.original_filename = t.name
-				WHERE a.original_filename IS NULL
+				LEFT JOIN audio_assets a ON a.filename = t.name
+				WHERE a.filename IS NULL
 			`).all() as Array<{ name: string }>
 
 			return rows.map(r => r.name)
@@ -51,7 +51,7 @@ export function registerIPC(): void {
 		})
 	})
 
-	ipcMain.handle('audio_assets:save_db', (event, data): Result<unknown> => {
+	ipcMain.handle('audio_assets:insert', (event, data): Result<unknown> => {
 		let insertCount: number = 0
 		let rejectCount: number = 0
 		try{
@@ -60,16 +60,20 @@ export function registerIPC(): void {
 	
 			const insertStmt = db.prepare(`
 				INSERT INTO AUDIO_ASSETS(
-					original_filename,
+					filename,
 					content_type,
 					file_extension,
-					storage_uri
+					absolute_path,
+					relative_path,
+					tags
 				)
 				VALUES(
 					@filename,
 					@content_type,
 					@file_extension,
-					@storage_uri
+					@absolute_path,
+					@relative_path,
+					@json_tags
 				)
 			`)
 	
@@ -95,7 +99,6 @@ export function registerIPC(): void {
 			'tags',
 			'audio_tags.json'
 		)
-		console.log(audioTagsPath)
 		
 		if (!fs.existsSync(audioTagsPath)) return []
 		const raw = fs.readFileSync(audioTagsPath, 'utf-8')

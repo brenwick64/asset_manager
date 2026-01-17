@@ -5,6 +5,15 @@
     width: 100%;
     padding: 1rem;
     display: flex;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.new-audio-asset:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+.new-audio-asset-first-row {
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .new-audio-asset-left {

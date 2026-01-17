@@ -7,9 +7,12 @@ import NewAudioAssets from './NewAudioAssets/NewAudioAssets'
 
 function FileUploadScene() {
   const [dragged, setDragged] = useState<boolean>(false)
+  const [isSaving, setIsSaving] = useState<boolean>(false)
   const [audioFilesDropped, setAudioFilesDropped] = useState<boolean>(false)
   const [assetsLoaded, setAssetsLoaded] = useState<boolean>(false)
   const [droppedAssets, setDroppedAssets] = useState<AudioAsset[]>([])
+
+  const loading: boolean = !assetsLoaded || isSaving
   
   const resetScene = () => {
     setDragged(false)
@@ -54,18 +57,22 @@ function FileUploadScene() {
     if(!absolutePath){ return }
 
     const droppedAudioAssets: AudioAsset[] = await extractFiles(absolutePath, draggedItems, "audio")
-
-    // TODO: Toast this
+    
     if(droppedAudioAssets.length <= 0){ 
       setAudioFilesDropped(false)
       return
     }
 
-    console.log("absPath: " + absolutePath)
     if (absolutePath && droppedAudioAssets.length > 0){ //TODO: Guard clauses for split error handling
       console.log(droppedAudioAssets.length + " audio files dropped")
       // Separate out duplicate files
       const newAssetsList: AudioAsset[] = await window.db.get_new_audio_assets(droppedAudioAssets)
+      //TODO: handle
+      console.log(newAssetsList.length + " new audio files")
+      if(newAssetsList.length <= 0){
+        setAudioFilesDropped(false)
+        return
+      }
       console.log(newAssetsList.length + " new records")
       setDroppedAssets(newAssetsList)
       console.log("assets dropped:")
@@ -73,9 +80,11 @@ function FileUploadScene() {
       
     }
     else {
+      //TODO: Refactor to try/catch block
       //TODO: Toast notification?
     }
   }
+
 
   // Rendering Logic
 if(!audioFilesDropped) {
@@ -84,8 +93,8 @@ if(!audioFilesDropped) {
 
 return (
   <>
-    {!assetsLoaded && <Loader />}
-    <NewAudioAssets assets={droppedAssets} assetsLoaded={assetsLoaded} setAssetsLoaded={setAssetsLoaded} resetScene={resetScene} />
+    {loading && <Loader />}
+    <NewAudioAssets loading={loading} assets={droppedAssets} setAssetsLoaded={setAssetsLoaded} resetScene={resetScene} setIsSaving={setIsSaving} />
   </>
 )
 }

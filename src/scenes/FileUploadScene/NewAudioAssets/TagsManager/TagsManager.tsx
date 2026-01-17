@@ -1,6 +1,7 @@
 import './TagsManager.css'
 import { useState } from 'react'
 import { IoMdAdd } from "react-icons/io";
+import { LuTags } from "react-icons/lu";
 import Tag from './Tag/Tag'
 
 type Props = {
@@ -24,7 +25,9 @@ function TagsManager({ tags, setTags, onTagsUpdated }: Props) {
   }
 
   const addTag = (tagName: string): void => {
-    if(!input){ return }
+    if(!input) return
+    if(tagName.trim() === "") return
+    
     setTags((prev: string[]) => {
       const next: string[] = [...prev, tagName]
       void onTagsUpdated(next)
@@ -49,7 +52,10 @@ function TagsManager({ tags, setTags, onTagsUpdated }: Props) {
         })}
       </div>
       <div className='tag-input-container'>
-        <input className='tag-input' value={input} onChange={(e) => onInput(e)} onKeyDown={(e) => onKeyDown(e)} ></input>
+        <div className='tag-input-icon'>
+          <LuTags size={16} />
+        </div>
+        <input className='tag-input' placeholder='Add Tag' value={input} onChange={(e) => onInput(e)} onKeyDown={(e) => onKeyDown(e)} ></input>
         <button className='add-tag-btn' onClick={() => addTag(input)} >
           <IoMdAdd size={20}/>
         </button>

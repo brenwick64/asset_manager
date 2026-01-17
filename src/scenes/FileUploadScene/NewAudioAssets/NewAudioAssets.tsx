@@ -2,6 +2,7 @@ import './NewAudioAssets.css'
 import { useState, useEffect } from 'react'
 import { MAX_ASSETS_PER_PAGE } from '../../../globals/constants'
 import { usePaginateAssets } from '../../../hooks/usePaginateAssets'
+import { saveAudioAsset } from '../../../modules/saveAudioAssets'
 // Child Components
 import TagsManager from './TagsManager/TagsManager'
 import NewAudioAsset from './NewAudioAsset/NewAudioAsset'
@@ -9,24 +10,25 @@ import PaginationControls from './PaginationControls/PaginationControls'
 import SaveAssetsBtn from './SaveAssetsBtn/SaveAssetsBtn'
 
 type Props = {
+    loading: boolean
     assets: AudioAsset[]
-    assetsLoaded: boolean,
     setAssetsLoaded: React.Dispatch<React.SetStateAction<boolean>>
     resetScene: () => void
+    setIsSaving: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function normalizeAssets(assets: AudioAsset[]): NewAudioAsset[] {
   return assets.map((a: AudioAsset): NewAudioAsset => ({
     ...a,
     is_checked: false,
-    tags: [],
+    json_tags: "",
   }))
 }
 
-function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: Props) {
+function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSaving }: Props) {
     const [newAssets, setNewAssets] = useState<NewAudioAsset[]>(normalizeAssets(assets))
     const [tags, setTags] = useState<string[]>([])
-    const { paginationController } = usePaginateAssets(newAssets, MAX_ASSETS_PER_PAGE)
+    const { paginationController } = usePaginateAssets(newAssets, MAX_ASSETS_PER_PAGE)    
     
     let assetsLoadedCount: number = 0
 
@@ -40,15 +42,17 @@ function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: P
         setNewAssets(normalizeAssets(assets))
     }, [assets])
 
-    const onSaveAssets = (): void => {
-        const unsavedAssets: NewAudioAsset[] = newAssets.filter(asset => {            
-            return asset.is_checked === false
-        })
-        if(unsavedAssets.length <= 0) { resetScene() } // Reset scene after all files are saved
-        else {
-            setNewAssets(unsavedAssets)
-            paginationController.setPageNumber(1)
-        }
+    const onSaveAssets = async () => {
+        setIsSaving(true)
+        const checkedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return a.is_checked })
+        const uncheckedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return !a.is_checked })
+        const { payload, error } = await saveAudioAsset(checkedAssets, tags)
+
+        if(uncheckedAssets.length <= 0){ resetScene(); return; }
+
+        setNewAssets(uncheckedAssets)
+        paginationController.setPageNumber(1)
+        setIsSaving(false)
     }
 
     const onCheckAll = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -74,11 +78,10 @@ function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: P
         return result
     }
 
-
     return (
-        <div className={assetsLoaded ? 'scene' : 'hidden'}>
+        <div className={loading ? 'hidden' : 'scene'}>
             <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} />
-            <div className='new-audio-assets'>
+            <div className='new-audio-assets-container'>
                 <div className='audio-asset-header'>
                     <div className='audio-asset-header-left'>
                         <input type='checkbox' onChange={(e) => onCheckAll(e)}></input>
@@ -86,18 +89,20 @@ function NewAudioAssets({ assets, assetsLoaded, setAssetsLoaded, resetScene }: P
                     </div>
                     <div className='audio-asset-header-right'>Audio Player</div>
                 </div>
-                {newAssets.map((asset: NewAudioAsset, index: number) => {
-                    return <NewAudioAsset 
-                                key={asset.filename} 
-                                asset={asset} 
-                                index={index} 
-                                visibleIndexes={paginationController.visibleIndexes} 
-                                onAssetChecked={onAssetChecked} 
-                                onAssetLoaded={onAssetLoaded}
-                            />
-                })}
+                <div className='new-audio-assets'>
+                    {newAssets.map((asset: NewAudioAsset, index: number) => {
+                        return <NewAudioAsset 
+                                    key={asset.filename} 
+                                    asset={asset} 
+                                    index={index} 
+                                    visibleIndexes={paginationController.visibleIndexes} 
+                                    onAssetChecked={onAssetChecked} 
+                                    onAssetLoaded={onAssetLoaded}
+                                />
+                    })}
+                </div>
             </div>
-            <SaveAssetsBtn onSaveAssets={onSaveAssets} />
+            <SaveAssetsBtn assets={newAssets} onSaveAssets={onSaveAssets} />
             <PaginationControls controller={paginationController} />
         </div>
     )

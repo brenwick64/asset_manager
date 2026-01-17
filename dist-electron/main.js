@@ -9,7 +9,7 @@ const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
-    height: 900,
+    height: 1400,
     webPreferences: {
       preload: path.join(__dirname$2, "preload.mjs"),
       contextIsolation: true
@@ -87,8 +87,8 @@ function registerIPC() {
       const rows = db22.prepare(`
 				SELECT t.name
 				FROM ${tempTableName2} t
-				LEFT JOIN audio_assets a ON a.original_filename = t.name
-				WHERE a.original_filename IS NULL
+				LEFT JOIN audio_assets a ON a.filename = t.name
+				WHERE a.filename IS NULL
 			`).all();
       return rows.map((r) => r.name);
     };
@@ -105,7 +105,7 @@ function registerIPC() {
       return newNames.includes(asset.filename);
     });
   });
-  ipcMain.handle("audio_assets:save_db", (event, data) => {
+  ipcMain.handle("audio_assets:insert", (event, data) => {
     let insertCount = 0;
     let rejectCount = 0;
     try {
@@ -113,16 +113,20 @@ function registerIPC() {
       if (!db2) throw new Error("DB not initialized");
       const insertStmt = db2.prepare(`
 				INSERT INTO AUDIO_ASSETS(
-					original_filename,
+					filename,
 					content_type,
 					file_extension,
-					storage_uri
+					absolute_path,
+					relative_path,
+					tags
 				)
 				VALUES(
 					@filename,
 					@content_type,
 					@file_extension,
-					@storage_uri
+					@absolute_path,
+					@relative_path,
+					@json_tags
 				)
 			`);
       const insertMany = db2.transaction((assets) => {
@@ -148,7 +152,6 @@ function registerIPC() {
       "tags",
       "audio_tags.json"
     );
-    console.log(audioTagsPath);
     if (!fs$1.existsSync(audioTagsPath)) return [];
     const raw = fs$1.readFileSync(audioTagsPath, "utf-8");
     const parsed = JSON.parse(raw);
