@@ -12,3 +12,13 @@
     flex-direction: column;
     width: 100%;
 }
+
+.new-audio-assets-bottom {
+    width: 100%;
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}

@@ -145,9 +145,11 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
                     })}
                 </div>
             </div>
-            <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} replaceTags={replaceTags} addNewTags={addNewTags} resetTags={resetTags} />
-            <SaveAssetsBtn assets={newAssets} onSaveAssets={onSaveAssets} />
-            <PaginationControls controller={paginationController} />
+            <div className='new-audio-assets-bottom'>
+                <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} replaceTags={replaceTags} addNewTags={addNewTags} resetTags={resetTags} />
+                <SaveAssetsBtn assets={newAssets} onSaveAssets={onSaveAssets} />
+                <PaginationControls controller={paginationController} />
+            </div>
         </div>
     )
 }

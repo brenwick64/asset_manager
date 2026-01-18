@@ -1,7 +1,11 @@
 .save-assets-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
     cursor: pointer;
     color: white;
-    padding:  1rem 1.5rem;
+    padding:  0.75rem 1rem;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.2px;
@@ -13,4 +17,11 @@
 .save-assets-btn-inactive {
     pointer-events: none;
     background: rgba(127, 255, 212, 0.384);
+}
+
+.save-assets-btn-icon {
+}
+
+.save-assets-btn-text {
+    
 }

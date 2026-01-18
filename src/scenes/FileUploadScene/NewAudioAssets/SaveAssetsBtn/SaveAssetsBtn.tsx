@@ -1,4 +1,6 @@
 import './SaveAssetsBtn.css'
+import { MdFileUpload } from "react-icons/md";
+
 
 type Props = {
     assets: NewAudioAsset[]
@@ -13,7 +15,8 @@ function SaveAssetsBtn({ assets, onSaveAssets }: Props) {
       className={assetChecked ? 'save-assets-btn' : 'save-assets-btn save-assets-btn-inactive'} 
       onClick={onSaveAssets}
     >
-        Save  
+      <span><MdFileUpload size={20} /></span>
+      <span>Save & Upload </span>
     </button>
   ) 
 }

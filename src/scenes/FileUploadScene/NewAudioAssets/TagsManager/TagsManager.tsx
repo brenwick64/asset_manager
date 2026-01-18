@@ -1,7 +1,8 @@
 import './TagsManager.css'
 import { useState } from 'react'
-import { IoMdAdd } from "react-icons/io";
-import { LuTags } from "react-icons/lu";
+import { IoMdAdd, IoMdClose } from "react-icons/io"
+import { LuTags } from "react-icons/lu"
+import { TbRefresh } from "react-icons/tb"
 import Tag from './Tag/Tag'
 
 type Props = {
@@ -70,9 +71,18 @@ function TagsManager({ tags, setTags, onTagsUpdated, replaceTags, addNewTags, re
       </div>
       {/* buttons */}
       <div className='tags-btn-container'>
-        <button className='tags-btn'onClick={() => replaceTags()}>Replace Tags</button>
-        <button className='tags-btn'onClick={() => addNewTags()}>Add Tags</button>
-        <button className='tags-btn'onClick={() => resetTags()}>Reset Tags</button>
+        <button className='tags-btn'onClick={() => addNewTags()}>
+            <span className='tags-btn-icon'><IoMdAdd /></span>
+            <span className='tags-btn-text'>Add Tags</span>
+        </button>
+        <button className='tags-btn'onClick={() => replaceTags()}>
+            <span className='tags-btn-icon'><TbRefresh /></span>
+            <span className='tags-btn-text'>Replace Tags</span>
+        </button>
+        <button className='tags-btn'onClick={() => resetTags()}>
+            <span className='tags-btn-icon'><IoMdClose /></span>
+            <span className='tags-btn-text'>Remove Tags</span>
+        </button>
       </div>
     </div>
   )

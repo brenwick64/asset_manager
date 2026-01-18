@@ -8,8 +8,8 @@ const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 export function createWindow(): BrowserWindow {
 	const win = new BrowserWindow({
-		width: 1400,
-		height: 1400,
+		width: 1600,
+		height: 1500,
 		webPreferences: {
 			preload: path.join(__dirname, 'preload.mjs'),
 			contextIsolation: true		

@@ -42,9 +42,6 @@ function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLo
     
   }, [asset.absolute_path, asset.relative_path, asset.is_checked])
 
-  // TODO: make this more elegant
-  if(!src){ return <div className={visibleIndexes.includes(index) ? '' : 'hidden'}>LOADING</div>}
-
   return (
     // <div className='new-audio-asset'>
     <div className={extractCSSClasses()}>
