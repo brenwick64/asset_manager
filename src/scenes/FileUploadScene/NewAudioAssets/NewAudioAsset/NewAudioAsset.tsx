@@ -10,7 +10,7 @@ type Props = {
     onAssetLoaded: () => void
 }
 
-function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLoaded }: Props) {
+function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLoaded }: Props) {  
   const audioRef: React.MutableRefObject<HTMLAudioElement | null> = useRef(null)
   const [src, setSrc] = useState<string>()
 
@@ -52,6 +52,13 @@ function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLo
           <input type='checkbox' checked={asset.is_checked} onChange={() => onAssetChecked(asset.filename)} />
           <audio ref={audioRef} src={src} onLoadedData={handleAudioLoaded} />
           {asset.filename}
+        </div>
+        <div className='new-audio-asset-center'>
+          <div className='new-asset-tags'>
+            {JSON.parse(asset.json_tags).map((tag: string) => {
+              return <div className='new-tag' key={tag}>{tag}</div>
+            })}
+          </div>
         </div>
         <div className='new-audio-asset-right'>
           <AudioControls audioRef={audioRef} />

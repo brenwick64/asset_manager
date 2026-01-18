@@ -17,14 +17,16 @@ type Props = {
     setIsSaving: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+// helper functions
 function normalizeAssets(assets: AudioAsset[]): NewAudioAsset[] {
   return assets.map((a: AudioAsset): NewAudioAsset => ({
     ...a,
     is_checked: false,
-    json_tags: "",
+    json_tags: "[]",
   }))
 }
 
+// main
 function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSaving }: Props) {
     const [newAssets, setNewAssets] = useState<NewAudioAsset[]>(normalizeAssets(assets))
     const [tags, setTags] = useState<string[]>([])
@@ -42,6 +44,49 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
         setNewAssets(normalizeAssets(assets))
     }, [assets])
 
+    // Tag Functions
+    const replaceTags = (): void => {
+        const updatedAssets: NewAudioAsset[] = newAssets.map((asset: NewAudioAsset) => {
+            if (!asset.is_checked) return asset
+            return {
+            ...asset,
+            json_tags: JSON.stringify(tags),
+            }
+        })
+        setNewAssets(updatedAssets)
+    }
+
+    const addNewTags = (): void => {
+        const updatedAssets: NewAudioAsset[] = newAssets.map((asset: NewAudioAsset) => {
+            if (!asset.is_checked) return asset
+            const existingTags: string[] = JSON.parse(asset.json_tags)
+            const newTags: string[] = existingTags
+            // Add new tags
+            tags.forEach((tag: string) => {
+                if(!existingTags.includes(tag)){
+                    newTags.push(tag)
+                }
+            })            
+            return {
+            ...asset,
+            json_tags: JSON.stringify(newTags),
+            }
+        })
+        setNewAssets(updatedAssets)
+    }
+
+    const resetTags = (): void => {
+        const resetAssets: NewAudioAsset[] = newAssets.map((asset: NewAudioAsset) => {
+            if (!asset.is_checked) return asset
+            return {
+                ...asset,
+                json_tags: JSON.stringify([])
+            }
+        })
+        setNewAssets(resetAssets)
+    }
+
+    // Event Handlers
     const onSaveAssets = async () => {
         setIsSaving(true)
         const checkedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return a.is_checked })
@@ -55,12 +100,12 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
         setIsSaving(false)
     }
 
+
     const onCheckAll = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const isChecked: boolean = e.target.checked
         setNewAssets(prev => prev.map((a: NewAudioAsset) => ({ ...a, is_checked: isChecked })))
     }
 
-    // Audio Asset event handlers
     const onAssetChecked = (filename: string): void => {        
         setNewAssets(prev => prev.map((a: NewAudioAsset) => (a.filename === filename ? { ...a, is_checked: !a.is_checked }: a)))
     }
@@ -72,7 +117,6 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
         }
     }
 
-    // Tags event handlers
     const onTagsUpdated = async (updatedTags: string[]): Promise<Result<unknown>> => {
         const result = await window.local_storage.set_audio_tags(updatedTags)
         return result
@@ -80,7 +124,6 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
 
     return (
         <div className={loading ? 'hidden' : 'scene'}>
-            <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} />
             <div className='new-audio-assets-container'>
                 <div className='audio-asset-header'>
                     <div className='audio-asset-header-left'>
@@ -102,6 +145,7 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
                     })}
                 </div>
             </div>
+            <TagsManager tags={tags} setTags={setTags} onTagsUpdated={onTagsUpdated} replaceTags={replaceTags} addNewTags={addNewTags} resetTags={resetTags} />
             <SaveAssetsBtn assets={newAssets} onSaveAssets={onSaveAssets} />
             <PaginationControls controller={paginationController} />
         </div>

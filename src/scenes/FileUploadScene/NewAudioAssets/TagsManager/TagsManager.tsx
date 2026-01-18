@@ -8,9 +8,12 @@ type Props = {
   tags: string[]
   setTags: React.Dispatch<React.SetStateAction<string[]>>
   onTagsUpdated: (tags: string[]) => Promise<Result<unknown>>
+  replaceTags: () => void
+  addNewTags: () => void
+  resetTags: () => void
 }
 
-function TagsManager({ tags, setTags, onTagsUpdated }: Props) {
+function TagsManager({ tags, setTags, onTagsUpdated, replaceTags, addNewTags, resetTags }: Props) {
   const [input, setInput] = useState<string>("")
 
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,19 +49,30 @@ function TagsManager({ tags, setTags, onTagsUpdated }: Props) {
 
   return (
     <div className='tags-manager'>
+      {/* tags */}
       <div className='tags'>
         {tags.map((tag: string) => {
           return <Tag key={tag} tagName={tag} removeTag={removeTag} />
         })}
       </div>
+      {/* tag inputs */}
       <div className='tag-input-container'>
         <div className='tag-input-icon'>
           <LuTags size={16} />
         </div>
         <input className='tag-input' placeholder='Add Tag' value={input} onChange={(e) => onInput(e)} onKeyDown={(e) => onKeyDown(e)} ></input>
-        <button className='add-tag-btn' onClick={() => addTag(input)} >
+        <button 
+          className='add-tag-btn' 
+          onClick={() => addTag(input)} 
+        >
           <IoMdAdd size={20}/>
         </button>
+      </div>
+      {/* buttons */}
+      <div className='tags-btn-container'>
+        <button className='tags-btn'onClick={() => replaceTags()}>Replace Tags</button>
+        <button className='tags-btn'onClick={() => addNewTags()}>Add Tags</button>
+        <button className='tags-btn'onClick={() => resetTags()}>Reset Tags</button>
       </div>
     </div>
   )
