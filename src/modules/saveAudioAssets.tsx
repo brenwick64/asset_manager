@@ -1,38 +1,34 @@
-type FSPayload = {
-    saved: NewAudioAsset[]
-    failed: NewAudioAsset[]
-}
-
-type DBPayload = {
-    inserted: number
-    rejected: number
-}
-
 type SaveAudioAssetPayload = {
-    fsResponse: Result<FSPayload>
-    dbResponse: Result<DBPayload>
+    savedAssets: NewAudioAsset[]
+    rejectedAssets: NewAudioAsset[]
 }
 
+export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<SaveAudioAssetPayload>> => {
+    const savedAssets: NewAudioAsset[] = []
+    const rejectedAssets: NewAudioAsset[] = []
 
-export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<unknown>> => {
+    try{
+        for(const asset of audioAssets) {
+            const fsSaved: boolean = await window.fs.write_audio_file(asset) 
+            
+            if(!fsSaved){
+                rejectedAssets.push(asset)
+                continue
+            }
+    
+            const dbSaved: boolean = await window.db.save_audio_asset(asset)
+            if(!dbSaved) {
+                rejectedAssets.push(asset)
+                continue
+            }
+    
+            savedAssets.push(asset)
+        }
 
-    const saveDB = async (assets: NewAudioAsset[]): Promise<Result<DBPayload>> => {
-        const result: Result<DBPayload> = await window.db.save_audio_assets(assets)  
-        return result
+        await new Promise(resolve => setTimeout(resolve, 250)) // TODO: just to test loading screen logic
+        return { payload: { savedAssets: savedAssets, rejectedAssets: rejectedAssets }, error: null }
     }
-
-    const saveFS = async (assets: NewAudioAsset[]): Promise<Result<FSPayload>> => {
-        const result: Result<FSPayload> = await window.fs.write_audio_files(assets)
-        return result
+    catch(err) {
+        return { payload: null, error: err instanceof Error ? err : Error("Server Error: saveAudioAsset") }
     }
-
-    // main workflow
-    const dbResult: Result<DBPayload> = await saveDB(audioAssets)    
-    const fsResult: Result<FSPayload> = await saveFS(audioAssets)
-
-
-    await new Promise(resolve => setTimeout(resolve, 250)) // TODO: just to test loading screen logic
-
-    const payload: SaveAudioAssetPayload = { fsResponse: fsResult, dbResponse: dbResult }
-    return { payload: payload, error: null }
 }

@@ -4,11 +4,11 @@ declare global {
 			get_file_url: (absoluteRoot: string, relative: string) => Promise<string>
 		},
 		db: {
-			get_new_audio_assets: (audioAssets: AudioAsset[]) => Promise<AudioAsset[]>
-			save_audio_assets: (fileEntries: AudioAsset[]) => Promise<Result>
+			get_new_audio_asset: (audioAssets: AudioAsset) => Promise<AudioAsset[]>
+			save_audio_asset: (fileEntries: AudioAsset) => Promise<Result>
 		},
 		fs: {
-			write_audio_files: (assets: NewAudioAsset[]) => Promise<Result>
+			write_audio_file: (assets: NewAudioAsset) => Promise<Result>
 		},
 		local_storage: {
 			get_audio_tags: () => Promise<string[]>

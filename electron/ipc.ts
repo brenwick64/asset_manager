@@ -6,6 +6,11 @@ import { pathToFileURL } from 'node:url'
 import { ipcMain, app } from 'electron'
 import { getDatabase } from './db'
 
+type FSSaveResult = {
+	fs_saved: NewAudioAsset[]
+	fs_rejected: NewAudioAsset[]
+}
+
 
 export function registerIPC(): void {	
 
@@ -52,46 +57,37 @@ export function registerIPC(): void {
 		})
 	})
 
-	ipcMain.handle('audio_assets:insert', (event, data): Result<unknown> => {
-		let insertCount: number = 0
-		let rejectCount: number = 0
-		try{
-			const db: Database = getDatabase()
-			if (!db) throw new Error('DB not initialized')
-	
-			const insertStmt = db.prepare(`
-				INSERT INTO AUDIO_ASSETS(
-					filename,
-					content_type,
-					file_extension,
-					absolute_path,
-					relative_path,
-					tags
-				)
-				VALUES(
-					@filename,
-					@content_type,
-					@file_extension,
-					@absolute_path,
-					@relative_path,
-					@json_tags
-				)
-			`)
-	
-			const insertMany = db.transaction((assets: AudioAsset[]) => {
-				for (const asset of assets) {
-					const response = insertStmt.run(asset)					
-					if(response) { insertCount += 1 } 
-					else{ rejectCount += 1 }
-				}
-			})
-			insertMany(data)
-			return { payload: { inserted: insertCount, rejected: rejectCount }, error: null }
-		}
-		catch(err) {
-			return { payload: null, error: err instanceof Error ? err : Error('Error') }
+	ipcMain.handle('audio_assets:insert_single', (event, asset: NewAudioAsset): boolean => {
+		const db: Database = getDatabase()
+		if (!db) throw new Error('Server Error: DB not initialized')
+		const insertStmt = db.prepare(`
+			INSERT INTO AUDIO_ASSETS(
+				filename,
+				content_type,
+				file_extension,
+				absolute_path,
+				relative_path,
+				tags
+			)
+			VALUES(
+				@filename,
+				@content_type,
+				@file_extension,
+				@absolute_path,
+				@relative_path,
+				@json_tags
+			)
+		`)
+
+		try {
+			insertStmt.run(asset)
+			return true
+
+		} catch(err) {
+			return false
 		}
 	})
+
 
 	ipcMain.handle('file:get_audio_tags', (event, data): string[] => {
 		const audioTagsPath: string = path.join(
@@ -145,43 +141,27 @@ export function registerIPC(): void {
 		return pathToFileURL(data).toString()
 	})
 
-	ipcMain.handle('fs:write_audio_files', async (event, data): Promise<Result<unknown>> => {
-
-		const copyAudioAssets = async (data: NewAudioAsset[]): Promise<{ saved: NewAudioAsset[], failed: NewAudioAsset[] }> => {
-			const saved: NewAudioAsset[] = []
-			const failed: NewAudioAsset[] = []
-
-			for(const entry of data) {
-				const audioAsset: NewAudioAsset = entry as NewAudioAsset
-				if(!audioAsset){ continue }
-
-				// construct source and dest paths from data
-				const sourcePath: string = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`)
-				const destDir: string = path.join(baseDirectory, audioAsset.relative_path)
-				const destPath: string = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`)
-
-				try {
-					// create directory and copy file
-					await mkdir(destDir, { recursive: true })
-					await copyFile(sourcePath, destPath)
-					saved.push(audioAsset)
-				}
-				catch(err) {
-					failed.push(audioAsset)
-				}
-			}
-			return { saved: saved, failed: failed }
-		}
-
+	ipcMain.handle('fs:write_audio_file', async (event, asset: NewAudioAsset): Promise<boolean> => {
+		// Create base directory if it doesnt exist
 		const baseDirectory: string = path.join(app.getPath('userData'), 'saved_assets', 'audio')
 		await mkdir(baseDirectory, { recursive: true })
 
-		try{
-			const { saved, failed } = await copyAudioAssets(data)
-			return { payload: {saved: saved, failed: failed }, error: null }
+		// construct source and dest paths from data
+		const fileNameWithExt: string = `${asset.filename}.${asset.file_extension}`
+		const sourcePath: string = path.join(asset.absolute_path, asset.relative_path, fileNameWithExt)
+
+		const destDir: string = path.join(baseDirectory, asset.relative_path)
+		const destPath: string = path.join(destDir, fileNameWithExt)
+
+		try {
+			// create directory and copy file
+			await mkdir(destDir, { recursive: true })
+			await copyFile(sourcePath, destPath)
+			return true
 		}
-		catch(err) {
-			return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") }
+		catch (err) {
+			return false
 		}
 	})
+
 }

@@ -106,44 +106,32 @@ function registerIPC() {
       return newNames.includes(asset.filename);
     });
   });
-  ipcMain.handle("audio_assets:insert", (event, data) => {
-    let insertCount = 0;
-    let rejectCount = 0;
+  ipcMain.handle("audio_assets:insert_single", (event, asset) => {
+    const db2 = getDatabase();
+    if (!db2) throw new Error("Server Error: DB not initialized");
+    const insertStmt = db2.prepare(`
+			INSERT INTO AUDIO_ASSETS(
+				filename,
+				content_type,
+				file_extension,
+				absolute_path,
+				relative_path,
+				tags
+			)
+			VALUES(
+				@filename,
+				@content_type,
+				@file_extension,
+				@absolute_path,
+				@relative_path,
+				@json_tags
+			)
+		`);
     try {
-      const db2 = getDatabase();
-      if (!db2) throw new Error("DB not initialized");
-      const insertStmt = db2.prepare(`
-				INSERT INTO AUDIO_ASSETS(
-					filename,
-					content_type,
-					file_extension,
-					absolute_path,
-					relative_path,
-					tags
-				)
-				VALUES(
-					@filename,
-					@content_type,
-					@file_extension,
-					@absolute_path,
-					@relative_path,
-					@json_tags
-				)
-			`);
-      const insertMany = db2.transaction((assets) => {
-        for (const asset of assets) {
-          const response = insertStmt.run(asset);
-          if (response) {
-            insertCount += 1;
-          } else {
-            rejectCount += 1;
-          }
-        }
-      });
-      insertMany(data);
-      return { payload: { inserted: insertCount, rejected: rejectCount }, error: null };
+      insertStmt.run(asset);
+      return true;
     } catch (err) {
-      return { payload: null, error: err instanceof Error ? err : Error("Error") };
+      return false;
     }
   });
   ipcMain.handle("file:get_audio_tags", (event, data) => {
@@ -186,35 +174,19 @@ function registerIPC() {
     console.log(pathToFileURL(data).toString());
     return pathToFileURL(data).toString();
   });
-  ipcMain.handle("fs:write_audio_files", async (event, data) => {
-    const copyAudioAssets = async (data2) => {
-      const saved = [];
-      const failed = [];
-      for (const entry of data2) {
-        const audioAsset = entry;
-        if (!audioAsset) {
-          continue;
-        }
-        const sourcePath = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`);
-        const destDir = path.join(baseDirectory, audioAsset.relative_path);
-        const destPath = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`);
-        try {
-          await mkdir(destDir, { recursive: true });
-          await copyFile(sourcePath, destPath);
-          saved.push(audioAsset);
-        } catch (err) {
-          failed.push(audioAsset);
-        }
-      }
-      return { saved, failed };
-    };
+  ipcMain.handle("fs:write_audio_file", async (event, asset) => {
     const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
     await mkdir(baseDirectory, { recursive: true });
+    const fileNameWithExt = `${asset.filename}.${asset.file_extension}`;
+    const sourcePath = path.join(asset.absolute_path, asset.relative_path, fileNameWithExt);
+    const destDir = path.join(baseDirectory, asset.relative_path);
+    const destPath = path.join(destDir, fileNameWithExt);
     try {
-      const { saved, failed } = await copyAudioAssets(data);
-      return { payload: { saved, failed }, error: null };
+      await mkdir(destDir, { recursive: true });
+      await copyFile(sourcePath, destPath);
+      return true;
     } catch (err) {
-      return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") };
+      return false;
     }
   });
 }
