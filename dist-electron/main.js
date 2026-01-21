@@ -187,22 +187,35 @@ function registerIPC() {
     return pathToFileURL(data).toString();
   });
   ipcMain.handle("fs:write_audio_files", async (event, data) => {
+    const copyAudioAssets = async (data2) => {
+      const saved = [];
+      const failed = [];
+      for (const entry of data2) {
+        const audioAsset = entry;
+        if (!audioAsset) {
+          continue;
+        }
+        const sourcePath = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`);
+        const destDir = path.join(baseDirectory, audioAsset.relative_path);
+        const destPath = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`);
+        try {
+          await mkdir(destDir, { recursive: true });
+          await copyFile(sourcePath, destPath);
+          saved.push(audioAsset);
+        } catch (err) {
+          failed.push(audioAsset);
+        }
+      }
+      return { saved, failed };
+    };
     const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
     await mkdir(baseDirectory, { recursive: true });
-    for (const entry of data) {
-      const audioAsset = entry;
-      if (!audioAsset) {
-        continue;
-      }
-      const sourcePath = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`);
-      const destDir = path.join(baseDirectory, audioAsset.relative_path);
-      const destPath = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`);
-      await mkdir(destDir, { recursive: true });
-      await copyFile(sourcePath, destPath);
-      console.log(sourcePath);
-      console.log(destPath);
+    try {
+      const { saved, failed } = await copyAudioAssets(data);
+      return { payload: { saved, failed }, error: null };
+    } catch (err) {
+      return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") };
     }
-    return { payload: null, error: null };
   });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));

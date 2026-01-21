@@ -93,7 +93,8 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
         const uncheckedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return !a.is_checked })
 
         if(checkedAssets){
-            const { payload, error } = await saveAudioAsset(checkedAssets)
+            const { payload, error } = await saveAudioAsset(checkedAssets)    
+            //TODO: error handling        
             setNewAssets(uncheckedAssets)
             paginationController.setPageNumber(1)
         }

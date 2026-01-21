@@ -146,30 +146,42 @@ export function registerIPC(): void {
 	})
 
 	ipcMain.handle('fs:write_audio_files', async (event, data): Promise<Result<unknown>> => {
+
+		const copyAudioAssets = async (data: NewAudioAsset[]): Promise<{ saved: NewAudioAsset[], failed: NewAudioAsset[] }> => {
+			const saved: NewAudioAsset[] = []
+			const failed: NewAudioAsset[] = []
+
+			for(const entry of data) {
+				const audioAsset: NewAudioAsset = entry as NewAudioAsset
+				if(!audioAsset){ continue }
+
+				// construct source and dest paths from data
+				const sourcePath: string = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`)
+				const destDir: string = path.join(baseDirectory, audioAsset.relative_path)
+				const destPath: string = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`)
+
+				try {
+					// create directory and copy file
+					await mkdir(destDir, { recursive: true })
+					await copyFile(sourcePath, destPath)
+					saved.push(audioAsset)
+				}
+				catch(err) {
+					failed.push(audioAsset)
+				}
+			}
+			return { saved: saved, failed: failed }
+		}
+
 		const baseDirectory: string = path.join(app.getPath('userData'), 'saved_assets', 'audio')
 		await mkdir(baseDirectory, { recursive: true })
 
-		for(const entry of data) {
-			const audioAsset: NewAudioAsset = entry as NewAudioAsset
-			if(!audioAsset){ continue }
-
-			// construct source and dest paths from data
-			const sourcePath: string = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`)
-			const destDir: string = path.join(baseDirectory, audioAsset.relative_path)
-			const destPath: string = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`)
-			
-			// create directory and copy file
-			await mkdir(destDir, { recursive: true })
-			await copyFile(sourcePath, destPath)
-
-
-			console.log(sourcePath);
-			console.log(destPath);
-			
-			
-
+		try{
+			const { saved, failed } = await copyAudioAssets(data)
+			return { payload: {saved: saved, failed: failed }, error: null }
 		}
-
-		return { payload: null, error: null }
+		catch(err) {
+			return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") }
+		}
 	})
 }
