@@ -30,6 +30,10 @@ export default defineConfig(({ mode }) => {
 
     // These are Vite (renderer) build options. This is where `build:` belongs.
     build: {
+      rollupOptions: {
+        external: ["electron", "node:path", "node:url"],
+        output: { format: "es" }
+      },
       assetsDir: 'assets',
     }
   }

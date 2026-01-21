@@ -1,12 +1,26 @@
 import './FileUploadScene.css'
 import { useState } from 'react'
-import { BsUpload } from 'react-icons/bs'
-import { extractFiles } from '../../utils/fileUploadUtils'
-
+import { extractPath, extractFiles } from '../../utils/fileUploadUtils'
+import Loader from '../../components/Loader/Loader'
+import FileDrop from './FileDrop/FileDrop'
+import NewAudioAssets from './NewAudioAssets/NewAudioAssets'
 
 function FileUploadScene() {
   const [dragged, setDragged] = useState<boolean>(false)
+  const [isSaving, setIsSaving] = useState<boolean>(false)
+  const [audioFilesDropped, setAudioFilesDropped] = useState<boolean>(false)
+  const [assetsLoaded, setAssetsLoaded] = useState<boolean>(false)
+  const [droppedAssets, setDroppedAssets] = useState<AudioAsset[]>([])
+
+  const loading: boolean = !assetsLoaded || isSaving
   
+  const resetScene = () => {
+    setDragged(false)
+    setAudioFilesDropped(false)
+    setAssetsLoaded(false)
+    setDroppedAssets([])
+  }
+
   // -- Event Handlers --
   const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -27,41 +41,62 @@ function FileUploadScene() {
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault()
+    setDragged(false)
+
     if (event.dataTransfer.items.length === 0) return
+
+    setAudioFilesDropped(true) // Start Loader
+
     // Process files
     const draggedItems: DataTransferItem[] = Array.from(event.dataTransfer.items)
-    // Separate out Audio Files
-    const droppedAudioAssets: AudioAsset[] = await extractFiles(draggedItems, "audio")
-    if (droppedAudioAssets.length > 0){
+    
+    // Separate out Path and Audio Files
+    const absolutePath: string | null = extractPath(event.dataTransfer.files)    
+
+    //TODO: fix this to throw proper error
+    if(!absolutePath){ return }
+
+    const droppedAudioAssets: AudioAsset[] = await extractFiles(absolutePath, draggedItems, "audio")
+    
+    if(droppedAudioAssets.length <= 0){ 
+      setAudioFilesDropped(false)
+      return
+    }
+
+    if (absolutePath && droppedAudioAssets.length > 0){ //TODO: Guard clauses for split error handling
       console.log(droppedAudioAssets.length + " audio files dropped")
       // Separate out duplicate files
       const newAssetsList: AudioAsset[] = await window.db.get_new_audio_assets(droppedAudioAssets)
+      //TODO: handle
+      console.log(newAssetsList.length + " new audio files")
+      if(newAssetsList.length <= 0){
+        setAudioFilesDropped(false)
+        return
+      }
       console.log(newAssetsList.length + " new records")
-
-      const test = await window.db.save_audio_assets(newAssetsList)
-      const { inserted, rejected } = test.payload
-      console.log(inserted + " inserts")
-      console.log(rejected + " rejects")
-
-      //TODO: Save to DB
-
-      //TODO: Save to File
+      setDroppedAssets(newAssetsList)
+      console.log("assets dropped:")
+      console.log(newAssetsList)
+      
     }
-    setDragged(false)
+    else {
+      //TODO: Refactor to try/catch block
+      //TODO: Toast notification?
+    }
   }
 
 
-  return (
-    <div 
-      className={dragged ? 'scene file-upload-scene file-upload-scene-dragged' : 'scene file-upload-scene'}
-      onDragEnter={(e) => handleDragEnter(e)}
-      onDragLeave={(e) => { handleDragLeave(e) }}
-      onDragOver={(e) => handleDragOver(e)}
-      onDrop={(e) => handleDrop(e)}
-    >
-      <BsUpload className='upload-icon' size={64} />
-    </div>
-  )
+  // Rendering Logic
+if(!audioFilesDropped) {
+  return <FileDrop dragged={dragged} handleDragEnter={handleDragEnter} handleDragOver={handleDragOver} handleDragLeave={handleDragLeave} handleDrop={handleDrop} /> 
+}
+
+return (
+  <>
+    {loading && <Loader />}
+    <NewAudioAssets loading={loading} assets={droppedAssets} setAssetsLoaded={setAssetsLoaded} resetScene={resetScene} setIsSaving={setIsSaving} />
+  </>
+)
 }
 
 export default FileUploadScene

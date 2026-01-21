@@ -1,0 +1,91 @@
+import './TagsManager.css'
+import { useState } from 'react'
+import { IoMdAdd, IoMdClose } from "react-icons/io"
+import { LuTags } from "react-icons/lu"
+import { TbRefresh } from "react-icons/tb"
+import Tag from './Tag/Tag'
+
+type Props = {
+  tags: string[]
+  setTags: React.Dispatch<React.SetStateAction<string[]>>
+  onTagsUpdated: (tags: string[]) => Promise<Result<unknown>>
+  replaceTags: () => void
+  addNewTags: () => void
+  resetTags: () => void
+}
+
+function TagsManager({ tags, setTags, onTagsUpdated, replaceTags, addNewTags, resetTags }: Props) {
+  const [input, setInput] = useState<string>("")
+
+  const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value)
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addTag(input)
+    }
+  }
+
+  const addTag = (tagName: string): void => {
+    if(!input) return
+    if(tagName.trim() === "") return
+    
+    setTags((prev: string[]) => {
+      const next: string[] = [...prev, tagName]
+      void onTagsUpdated(next)
+      return next
+    })
+    setInput("")
+  }
+
+  const removeTag = (tagName: string): void => {
+    setTags((prev: string[]) => {
+      const next: string[] = prev.filter((tag: string) => { return tag !== tagName })
+      void onTagsUpdated(next)
+      return next
+    })
+  }
+
+  return (
+    <div className='tags-manager'>
+      {/* tags */}
+      <div className='tags'>
+        {tags.map((tag: string) => {
+          return <Tag key={tag} tagName={tag} removeTag={removeTag} />
+        })}
+      </div>
+      {/* tag inputs */}
+      <div className='tag-input-container'>
+        <div className='tag-input-icon'>
+          <LuTags size={16} />
+        </div>
+        <input className='tag-input' placeholder='Add Tag' value={input} onChange={(e) => onInput(e)} onKeyDown={(e) => onKeyDown(e)} ></input>
+        <button 
+          className='add-tag-btn' 
+          onClick={() => addTag(input)} 
+        >
+          <IoMdAdd size={20}/>
+        </button>
+      </div>
+      {/* buttons */}
+      <div className='tags-btn-container'>
+        <button className='tags-btn'onClick={() => addNewTags()}>
+            <span className='tags-btn-icon'><IoMdAdd /></span>
+            <span className='tags-btn-text'>Add Tags</span>
+        </button>
+        <button className='tags-btn'onClick={() => replaceTags()}>
+            <span className='tags-btn-icon'><TbRefresh /></span>
+            <span className='tags-btn-text'>Replace Tags</span>
+        </button>
+        <button className='tags-btn'onClick={() => resetTags()}>
+            <span className='tags-btn-icon'><IoMdClose /></span>
+            <span className='tags-btn-text'>Remove Tags</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default TagsManager

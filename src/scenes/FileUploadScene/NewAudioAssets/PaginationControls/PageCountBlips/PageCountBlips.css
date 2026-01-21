@@ -1,0 +1,21 @@
+.page-count-blips {
+  display: flex;
+  gap: 6px;
+}
+
+.blip {
+  cursor: pointer;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  opacity: 0.4;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.blip-active {
+  cursor: arrow;
+  background: rgb(51, 177, 250);
+  opacity: 0.85;
+  transform: scale(1.5);
+}

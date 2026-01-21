@@ -1,0 +1,117 @@
+.tags-manager {
+    width: calc(100% - 2rem);
+    margin: 0rem 1rem;
+    padding: 1rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.65rem;
+    background-color: rgba(0, 0, 0, 0.015);
+}
+
+.tags {
+    min-height: 2.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tag-input-container {
+    width: 40rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* INPUT */
+.tag-input {
+  height: 2rem;
+  width: 20rem;
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
+  color: #1e1e1e;
+  background-color: #eee;
+}
+
+.tag-input-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+/* ADD TAG BTN */
+.add-tag-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #7fffd4;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+        transition:
+        background-color 120ms ease,
+        transform 80ms ease;
+}
+
+.add-tag-btn:hover {
+    background-color: #7fffd49f; /* lighter aquamarine */
+}
+
+.add-tag-btn:active {
+  background-color: aquamarine;
+  transform: scale(0.92);
+}
+
+/* APPLY BTN */
+.tags-btn-container {
+    width: 100%;
+    width: 26rem;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.tags-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+    height: 100%;
+    background-color: #eee;
+    border-radius: 6px;
+    gap: 0.5rem;
+
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.03),
+    0 6px 18px rgba(0, 0, 0, 0.06);
+
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: #ffffff;
+
+  transition: background 0.15s ease;
+}
+
+.tags-btn svg {
+    transition: color 0.15s ease;
+}
+
+.tags-btn-icon {
+    color: rgb(41, 172, 128);
+}
+
+.tags-btn:hover svg {
+    color: black;
+}
+
+.tags-btn:hover {
+    background-color: aquamarine;
+}

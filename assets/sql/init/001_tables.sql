@@ -10,10 +10,12 @@ CREATE TABLE IF NOT EXISTS audio_assets (
                 hex(randomblob(6))
 			)
 		) NOT NULL,
+	filename TEXT NOT NULL,
 	content_type TEXT NOT NULL,
     file_extension TEXT NOT NULL,
-	original_filename TEXT NOT NULL,
-	storage_uri TEXT NOT NULL,
+	absolute_path TEXT NOT NULL,
+	relative_path TEXT NOT NULL,
+	tags TEXT NOT NULL,
 
 	-- Store UTC as ISO-8601 text like: 2025-12-20T19:23:45.123Z
 	created_date_utc TEXT NOT NULL
@@ -24,8 +26,8 @@ CREATE TABLE IF NOT EXISTS audio_assets (
 
     -- Checks
     CHECK (length(content_type) > 0),
-    CHECK (length(original_filename) > 0),
-    CHECK (length(storage_uri) > 0),
+    CHECK (length(absolute_path) > 0),
+    CHECK (length(relative_path) > 0),
 	-- basic UUID
 	CHECK (
 		length(uuid) = 36

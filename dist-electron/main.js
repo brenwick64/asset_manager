@@ -1,14 +1,16 @@
 import path from "node:path";
-import { BrowserWindow, app, ipcMain, Menu } from "electron";
-import { fileURLToPath } from "node:url";
+import { BrowserWindow, app, ipcMain, protocol, net, Menu } from "electron";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import fs$1 from "node:fs";
+import { mkdir, copyFile } from "node:fs/promises";
 import fs from "fs/promises";
 import { createRequire } from "node:module";
 const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    width: 1600,
+    height: 1500,
     webPreferences: {
       preload: path.join(__dirname$2, "preload.mjs"),
       contextIsolation: true
@@ -86,8 +88,8 @@ function registerIPC() {
       const rows = db22.prepare(`
 				SELECT t.name
 				FROM ${tempTableName2} t
-				LEFT JOIN audio_assets a ON a.original_filename = t.name
-				WHERE a.original_filename IS NULL
+				LEFT JOIN audio_assets a ON a.filename = t.name
+				WHERE a.filename IS NULL
 			`).all();
       return rows.map((r) => r.name);
     };
@@ -104,7 +106,7 @@ function registerIPC() {
       return newNames.includes(asset.filename);
     });
   });
-  ipcMain.handle("audio_assets:save_db", (event, data) => {
+  ipcMain.handle("audio_assets:insert", (event, data) => {
     let insertCount = 0;
     let rejectCount = 0;
     try {
@@ -112,16 +114,20 @@ function registerIPC() {
       if (!db2) throw new Error("DB not initialized");
       const insertStmt = db2.prepare(`
 				INSERT INTO AUDIO_ASSETS(
-					original_filename,
+					filename,
 					content_type,
 					file_extension,
-					storage_uri
+					absolute_path,
+					relative_path,
+					tags
 				)
 				VALUES(
 					@filename,
 					@content_type,
 					@file_extension,
-					@storage_uri
+					@absolute_path,
+					@relative_path,
+					@json_tags
 				)
 			`);
       const insertMany = db2.transaction((assets) => {
@@ -140,10 +146,95 @@ function registerIPC() {
       return { payload: null, error: err instanceof Error ? err : Error("Error") };
     }
   });
+  ipcMain.handle("file:get_audio_tags", (event, data) => {
+    const audioTagsPath = path.join(
+      process.env.APP_ROOT,
+      "assets",
+      "tags",
+      "audio_tags.json"
+    );
+    if (!fs$1.existsSync(audioTagsPath)) return [];
+    const raw = fs$1.readFileSync(audioTagsPath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.tags) ? parsed.tags : [];
+  });
+  ipcMain.handle("file:set_audio_tags", (event, data) => {
+    const audioTagsPath = path.join(
+      process.env.APP_ROOT,
+      "assets",
+      "tags",
+      "audio_tags.json"
+    );
+    if (!Array.isArray(data)) {
+      return { payload: null, error: new Error("Tags payload must be an array") };
+    }
+    if (!data.every((t) => typeof t === "string")) {
+      return { payload: null, error: new Error("All tags must be strings") };
+    }
+    const tags = [...new Set(
+      data.map((t) => t.trim()).filter(Boolean)
+    )];
+    try {
+      fs$1.mkdirSync(path.dirname(audioTagsPath) ? path.dirname(audioTagsPath) : audioTagsPath.replace(/\/[^/]+$/, ""), { recursive: true });
+      fs$1.writeFileSync(audioTagsPath, JSON.stringify({ tags }, null, 2), "utf-8");
+      return { payload: "Ok", error: null };
+    } catch (err) {
+      return { payload: null, error: err instanceof Error ? err : new Error("Failed to write tags") };
+    }
+  });
+  ipcMain.handle("file:test", (event, data) => {
+    console.log(pathToFileURL(data).toString());
+    return pathToFileURL(data).toString();
+  });
+  ipcMain.handle("fs:write_audio_files", async (event, data) => {
+    const copyAudioAssets = async (data2) => {
+      const saved = [];
+      const failed = [];
+      for (const entry of data2) {
+        const audioAsset = entry;
+        if (!audioAsset) {
+          continue;
+        }
+        const sourcePath = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`);
+        const destDir = path.join(baseDirectory, audioAsset.relative_path);
+        const destPath = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`);
+        try {
+          await mkdir(destDir, { recursive: true });
+          await copyFile(sourcePath, destPath);
+          saved.push(audioAsset);
+        } catch (err) {
+          failed.push(audioAsset);
+        }
+      }
+      return { saved, failed };
+    };
+    const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
+    await mkdir(baseDirectory, { recursive: true });
+    try {
+      const { saved, failed } = await copyAudioAssets(data);
+      return { payload: { saved, failed }, error: null };
+    } catch (err) {
+      return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") };
+    }
+  });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
+protocol.registerSchemesAsPrivileged([
+  // Create a custom protocol to allow for file exchange via network protocols (not disk) (outside of chromium runtime)
+  { scheme: "asset", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
+]);
 app.whenReady().then(async () => {
+  protocol.handle("asset", async (request) => {
+    const url = new URL(request.url);
+    const abs = url.searchParams.get("abs");
+    const rel = url.searchParams.get("rel");
+    const filename = url.searchParams.get("filename");
+    const extension = url.searchParams.get("extension");
+    if (!abs || !rel) return new Response("Missing either abs or rel params in URL", { status: 400 });
+    const full = path.join(abs, rel, `${filename}.${extension}`);
+    return net.fetch(pathToFileURL(full).toString());
+  });
   Menu.setApplicationMenu(null);
   const { payload, error } = await initDatabase();
   if (!error) {

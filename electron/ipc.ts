@@ -1,5 +1,9 @@
+import fs from 'node:fs'
+import { mkdir, copyFile } from 'node:fs/promises'
+import path from 'node:path'
 import type { Database } from 'better-sqlite3'
-import { ipcMain } from 'electron'
+import { pathToFileURL } from 'node:url'
+import { ipcMain, app } from 'electron'
 import { getDatabase } from './db'
 
 
@@ -23,8 +27,8 @@ export function registerIPC(): void {
 			const rows = db.prepare(`
 				SELECT t.name
 				FROM ${tempTableName} t
-				LEFT JOIN audio_assets a ON a.original_filename = t.name
-				WHERE a.original_filename IS NULL
+				LEFT JOIN audio_assets a ON a.filename = t.name
+				WHERE a.filename IS NULL
 			`).all() as Array<{ name: string }>
 
 			return rows.map(r => r.name)
@@ -48,8 +52,7 @@ export function registerIPC(): void {
 		})
 	})
 
-	// TODO
-	ipcMain.handle('audio_assets:save_db', (event, data): Result<unknown> => {
+	ipcMain.handle('audio_assets:insert', (event, data): Result<unknown> => {
 		let insertCount: number = 0
 		let rejectCount: number = 0
 		try{
@@ -58,16 +61,20 @@ export function registerIPC(): void {
 	
 			const insertStmt = db.prepare(`
 				INSERT INTO AUDIO_ASSETS(
-					original_filename,
+					filename,
 					content_type,
 					file_extension,
-					storage_uri
+					absolute_path,
+					relative_path,
+					tags
 				)
 				VALUES(
 					@filename,
 					@content_type,
 					@file_extension,
-					@storage_uri
+					@absolute_path,
+					@relative_path,
+					@json_tags
 				)
 			`)
 	
@@ -86,4 +93,95 @@ export function registerIPC(): void {
 		}
 	})
 
+	ipcMain.handle('file:get_audio_tags', (event, data): string[] => {
+		const audioTagsPath: string = path.join(
+			process.env.APP_ROOT!,
+			'assets',
+			'tags',
+			'audio_tags.json'
+		)
+		
+		if (!fs.existsSync(audioTagsPath)) return []
+		const raw = fs.readFileSync(audioTagsPath, 'utf-8')
+		const parsed = JSON.parse(raw)
+		return Array.isArray(parsed.tags) ? parsed.tags : []
+	})
+
+	ipcMain.handle('file:set_audio_tags', (event, data): Result<unknown> => {
+		const audioTagsPath: string = path.join(
+			process.env.APP_ROOT!,
+			'assets',
+			'tags',
+			'audio_tags.json'
+		)
+
+		// -- asset proper types --
+		if (!Array.isArray(data)) {
+			return { payload: null, error: new Error('Tags payload must be an array') }
+		}
+		if (!data.every((t): t is string => typeof t === 'string')) {
+			return { payload: null, error: new Error('All tags must be strings') }
+		}
+
+		// Normalize + dedupe
+		const tags: string[] = [...new Set(
+		data
+			.map((t: string) => t.trim())
+			.filter(Boolean)
+		)]
+
+		try {
+			fs.mkdirSync(path.dirname(audioTagsPath) ? path.dirname(audioTagsPath) : audioTagsPath.replace(/\/[^/]+$/, ''),{ recursive: true })
+			fs.writeFileSync(audioTagsPath, JSON.stringify({ tags }, null, 2), 'utf-8')
+			return { payload: "Ok", error: null }
+		}
+		catch(err) {
+			return { payload: null, error: err instanceof Error ? err : new Error('Failed to write tags') }
+		}
+	})
+
+	ipcMain.handle('file:test', (event, data): string => {
+		console.log(pathToFileURL(data).toString());
+		return pathToFileURL(data).toString()
+	})
+
+	ipcMain.handle('fs:write_audio_files', async (event, data): Promise<Result<unknown>> => {
+
+		const copyAudioAssets = async (data: NewAudioAsset[]): Promise<{ saved: NewAudioAsset[], failed: NewAudioAsset[] }> => {
+			const saved: NewAudioAsset[] = []
+			const failed: NewAudioAsset[] = []
+
+			for(const entry of data) {
+				const audioAsset: NewAudioAsset = entry as NewAudioAsset
+				if(!audioAsset){ continue }
+
+				// construct source and dest paths from data
+				const sourcePath: string = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`)
+				const destDir: string = path.join(baseDirectory, audioAsset.relative_path)
+				const destPath: string = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`)
+
+				try {
+					// create directory and copy file
+					await mkdir(destDir, { recursive: true })
+					await copyFile(sourcePath, destPath)
+					saved.push(audioAsset)
+				}
+				catch(err) {
+					failed.push(audioAsset)
+				}
+			}
+			return { saved: saved, failed: failed }
+		}
+
+		const baseDirectory: string = path.join(app.getPath('userData'), 'saved_assets', 'audio')
+		await mkdir(baseDirectory, { recursive: true })
+
+		try{
+			const { saved, failed } = await copyAudioAssets(data)
+			return { payload: {saved: saved, failed: failed }, error: null }
+		}
+		catch(err) {
+			return { payload: null, error: err instanceof Error ? err : Error("copyAudioAssets error.") }
+		}
+	})
 }

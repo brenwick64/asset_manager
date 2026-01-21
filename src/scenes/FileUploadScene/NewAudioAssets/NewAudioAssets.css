@@ -1,0 +1,24 @@
+.new-audio-assets-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.new-audio-assets {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.new-audio-assets-bottom {
+    width: 100%;
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
