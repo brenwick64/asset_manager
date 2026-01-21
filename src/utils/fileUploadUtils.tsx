@@ -19,6 +19,11 @@ const getFileExtension = (fileName: string) => {
         return idx >= 0 ? fileName.slice(idx + 1).toLowerCase() : ""
 }
 
+const getRelativePath = (path: string, filename: string): string => {
+    const relPath: string = path.replace(filename, "")
+    return  relPath
+}
+
 const readAllEntries = (dirEntry: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> => {
     const reader: FileSystemDirectoryReader = dirEntry.createReader()
     const entries: FileSystemEntry[] = []
@@ -80,7 +85,7 @@ const convertEntries = (absolutePath: string, fileEntries: FileSystemEntry[]): A
             file_extension: getFileExtension(entry.name),
             content_type: 'audio',
             absolute_path: normalizeAbsolutePath(absolutePath),
-            relative_path: entry.fullPath
+            relative_path: getRelativePath(entry.fullPath, entry.name)
         })
     }
     return audioAssets

@@ -91,13 +91,15 @@ function NewAudioAssets({ loading, assets, setAssetsLoaded, resetScene, setIsSav
         setIsSaving(true)
         const checkedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return a.is_checked })
         const uncheckedAssets: NewAudioAsset[] = newAssets.filter((a: NewAudioAsset) => { return !a.is_checked })
-        const { payload, error } = await saveAudioAsset(checkedAssets, tags)
 
-        if(uncheckedAssets.length <= 0){ resetScene(); return; }
-
-        setNewAssets(uncheckedAssets)
-        paginationController.setPageNumber(1)
+        if(checkedAssets){
+            const { payload, error } = await saveAudioAsset(checkedAssets)
+            setNewAssets(uncheckedAssets)
+            paginationController.setPageNumber(1)
+        }
+        
         setIsSaving(false)
+        if(uncheckedAssets.length <= 0){ resetScene(); return; }
     }
 
 

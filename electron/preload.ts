@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld('db', {
   save_audio_assets: (data: NewAudioAsset[]) => ipcRenderer.invoke('audio_assets:insert', data)
 })
 
+contextBridge.exposeInMainWorld('fs', {
+  write_audio_files: (data: NewAudioAsset[]) => ipcRenderer.invoke('fs:write_audio_files', data)
+})
+
 contextBridge.exposeInMainWorld('asset_paths', {
   get_file_url: (absolute: string, relative: string) => ipcRenderer.invoke('file:test', absolute + relative)
 })

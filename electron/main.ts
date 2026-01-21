@@ -23,9 +23,13 @@ app.whenReady().then( async () => {
 	// Extract root URL
 	const abs: string | null = url.searchParams.get("abs")
 	const rel: string | null = url.searchParams.get("rel")
+	const filename: string | null = url.searchParams.get("filename")
+	const extension: string | null = url.searchParams.get("extension")
+
 	if (!abs || !rel) return new Response("Missing either abs or rel params in URL", { status: 400 })
 	// Construct full file URL
-	const full: string = path.join(abs, rel)
+	const full: string = path.join(abs, rel, `${filename}.${extension}`)
+	
 
     // IMPORTANT: use Electron net.fetch, not global fetch	
     return net.fetch(pathToFileURL(full).toString())

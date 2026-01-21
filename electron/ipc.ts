@@ -1,8 +1,9 @@
 import fs from 'node:fs'
+import { mkdir, copyFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { Database } from 'better-sqlite3'
 import { pathToFileURL } from 'node:url'
-import { ipcMain } from 'electron'
+import { ipcMain, app } from 'electron'
 import { getDatabase } from './db'
 
 
@@ -142,5 +143,33 @@ export function registerIPC(): void {
 	ipcMain.handle('file:test', (event, data): string => {
 		console.log(pathToFileURL(data).toString());
 		return pathToFileURL(data).toString()
+	})
+
+	ipcMain.handle('fs:write_audio_files', async (event, data): Promise<Result<unknown>> => {
+		const baseDirectory: string = path.join(app.getPath('userData'), 'saved_assets', 'audio')
+		await mkdir(baseDirectory, { recursive: true })
+
+		for(const entry of data) {
+			const audioAsset: NewAudioAsset = entry as NewAudioAsset
+			if(!audioAsset){ continue }
+
+			// construct source and dest paths from data
+			const sourcePath: string = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`)
+			const destDir: string = path.join(baseDirectory, audioAsset.relative_path)
+			const destPath: string = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`)
+			
+			// create directory and copy file
+			await mkdir(destDir, { recursive: true })
+			await copyFile(sourcePath, destPath)
+
+
+			console.log(sourcePath);
+			console.log(destPath);
+			
+			
+
+		}
+
+		return { payload: null, error: null }
 	})
 }

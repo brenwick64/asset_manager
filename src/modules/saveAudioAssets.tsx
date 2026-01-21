@@ -1,17 +1,8 @@
-export const saveAudioAsset = async (audioAssets: NewAudioAsset[], tags: string[]): Promise<Result<unknown>> => {
-    // helper functions
-    const addTags = (assets: NewAudioAsset[], tags: string[]): NewAudioAsset[] => {
-        return assets.map((a: NewAudioAsset): NewAudioAsset => ({
-        ...a,
-        json_tags: JSON.stringify(tags),
-        }))
-    }
+export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<unknown>> => {
 
-    // main functions
-    const saveDB = async (assets: NewAudioAsset[], tags: string[]): Promise<Result<unknown>> => {
+    const saveDB = async (assets: NewAudioAsset[]): Promise<Result<unknown>> => {
         try {
-            const taggedAssets: NewAudioAsset[] = addTags(assets, tags)
-            const result: Result<unknown> = await window.db.save_audio_assets(taggedAssets)
+            const result: Result<unknown> = await window.db.save_audio_assets(assets)
             return { payload: result, error: null }
         }
         catch(err) {
@@ -19,15 +10,25 @@ export const saveAudioAsset = async (audioAssets: NewAudioAsset[], tags: string[
         }
     }
 
-    const saveFS = async (): Promise<Result<unknown>> => {
+    const saveFS = async (assets: NewAudioAsset[]): Promise<Result<unknown>> => {
+        try {
+            const result: Result<unknown> = await window.fs.write_audio_files(assets)
+
+
+        }
+        catch(err) {
+
+        }
+
         return { payload: null, error: null }
     }
 
     // main workflow
-    const dbResult: Result<unknown> = await saveDB(audioAssets, tags)    
+    // const dbResult: Result<unknown> = await saveDB(audioAssets)    
+    const fsResult: Result<unknown> = await saveFS(audioAssets)
 
     await new Promise(resolve => setTimeout(resolve, 250)) // TODO: just to test loading screen logic
 
 
-    return { payload: dbResult, error: null }
+    return { payload: null, error: null }
 }

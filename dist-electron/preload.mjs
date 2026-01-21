@@ -22,6 +22,9 @@ electron.contextBridge.exposeInMainWorld("db", {
   get_new_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:get_new", data),
   save_audio_assets: (data) => electron.ipcRenderer.invoke("audio_assets:insert", data)
 });
+electron.contextBridge.exposeInMainWorld("fs", {
+  write_audio_files: (data) => electron.ipcRenderer.invoke("fs:write_audio_files", data)
+});
 electron.contextBridge.exposeInMainWorld("asset_paths", {
   get_file_url: (absolute, relative) => electron.ipcRenderer.invoke("file:test", absolute + relative)
 });

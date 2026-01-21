@@ -30,7 +30,7 @@ function NewAudioAsset({ asset, index, visibleIndexes, onAssetChecked, onAssetLo
   useEffect(() => {
     const loadSrc = async () => {
       try {
-        const fileURL: string = `asset:///asset?rel=${asset.relative_path}&abs=${asset.absolute_path}`        
+        const fileURL: string = `asset:///asset?rel=${asset.relative_path}&abs=${asset.absolute_path}&filename=${asset.filename}&extension=${asset.file_extension}`        
         setSrc(fileURL)
       }
       catch (err) {

@@ -2,6 +2,7 @@ import path from "node:path";
 import { BrowserWindow, app, ipcMain, protocol, net, Menu } from "electron";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import fs$1 from "node:fs";
+import { mkdir, copyFile } from "node:fs/promises";
 import fs from "fs/promises";
 import { createRequire } from "node:module";
 const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
@@ -185,6 +186,24 @@ function registerIPC() {
     console.log(pathToFileURL(data).toString());
     return pathToFileURL(data).toString();
   });
+  ipcMain.handle("fs:write_audio_files", async (event, data) => {
+    const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
+    await mkdir(baseDirectory, { recursive: true });
+    for (const entry of data) {
+      const audioAsset = entry;
+      if (!audioAsset) {
+        continue;
+      }
+      const sourcePath = path.join(audioAsset.absolute_path, audioAsset.relative_path, `${audioAsset.filename}.${audioAsset.file_extension}`);
+      const destDir = path.join(baseDirectory, audioAsset.relative_path);
+      const destPath = path.join(destDir, `${audioAsset.filename}.${audioAsset.file_extension}`);
+      await mkdir(destDir, { recursive: true });
+      await copyFile(sourcePath, destPath);
+      console.log(sourcePath);
+      console.log(destPath);
+    }
+    return { payload: null, error: null };
+  });
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
@@ -197,8 +216,10 @@ app.whenReady().then(async () => {
     const url = new URL(request.url);
     const abs = url.searchParams.get("abs");
     const rel = url.searchParams.get("rel");
+    const filename = url.searchParams.get("filename");
+    const extension = url.searchParams.get("extension");
     if (!abs || !rel) return new Response("Missing either abs or rel params in URL", { status: 400 });
-    const full = path.join(abs, rel);
+    const full = path.join(abs, rel, `${filename}.${extension}`);
     return net.fetch(pathToFileURL(full).toString());
   });
   Menu.setApplicationMenu(null);
