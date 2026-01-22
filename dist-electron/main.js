@@ -1,10 +1,10 @@
 import path from "node:path";
 import { BrowserWindow, app, ipcMain, protocol, net, Menu } from "electron";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import fs$1 from "node:fs";
-import { mkdir, copyFile } from "node:fs/promises";
 import fs from "fs/promises";
 import { createRequire } from "node:module";
+import { mkdir, copyFile } from "node:fs/promises";
+import fs$1 from "node:fs";
 const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 function createWindow() {
@@ -70,14 +70,14 @@ async function initDatabase() {
     return { error, payload: null };
   }
 }
-function registerIPC() {
-  ipcMain.handle("audio_assets:get_new", async (event, data) => {
+const registerAudioAssets = (ipcMain2) => {
+  ipcMain2.handle("audio_assets:get_new", async (event, data) => {
     const createTempTable = (db22) => {
       const tempTableName2 = `temp_names_${Date.now()}_${Math.floor(Math.random() * 1e9)}`;
       db22.exec(`CREATE TABLE ${tempTableName2} (
-						name TEXT PRIMARY KEY
-					);
-			`);
+                            name TEXT PRIMARY KEY
+                        );
+                `);
       return tempTableName2;
     };
     const queryNewNames = (db22, nameList, tempTableName2) => {
@@ -86,11 +86,11 @@ function registerIPC() {
         insert.run(name);
       }
       const rows = db22.prepare(`
-				SELECT t.name
-				FROM ${tempTableName2} t
-				LEFT JOIN audio_assets a ON a.filename = t.name
-				WHERE a.filename IS NULL
-			`).all();
+                    SELECT t.name
+                    FROM ${tempTableName2} t
+                    LEFT JOIN audio_assets a ON a.filename = t.name
+                    WHERE a.filename IS NULL
+                `).all();
       return rows.map((r) => r.name);
     };
     const dropTempTable = (db22, tempTableName2) => {
@@ -106,27 +106,27 @@ function registerIPC() {
       return newNames.includes(asset.filename);
     });
   });
-  ipcMain.handle("audio_assets:insert_single", (event, asset) => {
+  ipcMain2.handle("audio_assets:insert_single", (event, asset) => {
     const db2 = getDatabase();
     if (!db2) throw new Error("Server Error: DB not initialized");
     const insertStmt = db2.prepare(`
-			INSERT INTO AUDIO_ASSETS(
-				filename,
-				content_type,
-				file_extension,
-				absolute_path,
-				relative_path,
-				tags
-			)
-			VALUES(
-				@filename,
-				@content_type,
-				@file_extension,
-				@absolute_path,
-				@relative_path,
-				@json_tags
-			)
-		`);
+                INSERT INTO AUDIO_ASSETS(
+                    filename,
+                    content_type,
+                    file_extension,
+                    absolute_path,
+                    relative_path,
+                    tags
+                )
+                VALUES(
+                    @filename,
+                    @content_type,
+                    @file_extension,
+                    @absolute_path,
+                    @relative_path,
+                    @json_tags
+                )
+            `);
     try {
       insertStmt.run(asset);
       return true;
@@ -134,7 +134,26 @@ function registerIPC() {
       return false;
     }
   });
-  ipcMain.handle("file:get_audio_tags", (event, data) => {
+};
+const registerFS = (ipcMain2) => {
+  ipcMain2.handle("fs:write_audio_file", async (event, asset) => {
+    const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
+    await mkdir(baseDirectory, { recursive: true });
+    const fileNameWithExt = `${asset.filename}.${asset.file_extension}`;
+    const sourcePath = path.join(asset.absolute_path, asset.relative_path, fileNameWithExt);
+    const destDir = path.join(baseDirectory, asset.relative_path);
+    const destPath = path.join(destDir, fileNameWithExt);
+    try {
+      await mkdir(destDir, { recursive: true });
+      await copyFile(sourcePath, destPath);
+      return { saved: true, absolutePath: baseDirectory };
+    } catch (err) {
+      return { saved: false, absolutePath: null };
+    }
+  });
+};
+const registerLocalStorage = (ipcMain2) => {
+  ipcMain2.handle("local_storage:get_audio_tags", (event, data) => {
     const audioTagsPath = path.join(
       process.env.APP_ROOT,
       "assets",
@@ -146,7 +165,7 @@ function registerIPC() {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed.tags) ? parsed.tags : [];
   });
-  ipcMain.handle("file:set_audio_tags", (event, data) => {
+  ipcMain2.handle("local_storage:set_audio_tags", (event, data) => {
     const audioTagsPath = path.join(
       process.env.APP_ROOT,
       "assets",
@@ -170,25 +189,15 @@ function registerIPC() {
       return { payload: null, error: err instanceof Error ? err : new Error("Failed to write tags") };
     }
   });
-  ipcMain.handle("file:test", (event, data) => {
+  ipcMain2.handle("local_storage:test", (event, data) => {
     console.log(pathToFileURL(data).toString());
     return pathToFileURL(data).toString();
   });
-  ipcMain.handle("fs:write_audio_file", async (event, asset) => {
-    const baseDirectory = path.join(app.getPath("userData"), "saved_assets", "audio");
-    await mkdir(baseDirectory, { recursive: true });
-    const fileNameWithExt = `${asset.filename}.${asset.file_extension}`;
-    const sourcePath = path.join(asset.absolute_path, asset.relative_path, fileNameWithExt);
-    const destDir = path.join(baseDirectory, asset.relative_path);
-    const destPath = path.join(destDir, fileNameWithExt);
-    try {
-      await mkdir(destDir, { recursive: true });
-      await copyFile(sourcePath, destPath);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  });
+};
+function registerIPC() {
+  registerAudioAssets(ipcMain);
+  registerFS(ipcMain);
+  registerLocalStorage(ipcMain);
 }
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");

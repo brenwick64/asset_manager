@@ -29,6 +29,6 @@ electron.contextBridge.exposeInMainWorld("asset_paths", {
   get_file_url: (absolute, relative) => electron.ipcRenderer.invoke("file:test", absolute + relative)
 });
 electron.contextBridge.exposeInMainWorld("local_storage", {
-  get_audio_tags: () => electron.ipcRenderer.invoke("file:get_audio_tags"),
-  set_audio_tags: (tags) => electron.ipcRenderer.invoke("file:set_audio_tags", tags)
+  get_audio_tags: () => electron.ipcRenderer.invoke("local_storage:get_audio_tags"),
+  set_audio_tags: (tags) => electron.ipcRenderer.invoke("local_storage:set_audio_tags", tags)
 });

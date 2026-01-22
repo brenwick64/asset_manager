@@ -34,6 +34,6 @@ contextBridge.exposeInMainWorld('asset_paths', {
 })
 
 contextBridge.exposeInMainWorld('local_storage', {
-  get_audio_tags: () => ipcRenderer.invoke('file:get_audio_tags'),
-  set_audio_tags: (tags: string[]) => ipcRenderer.invoke('file:set_audio_tags', tags)
+  get_audio_tags: () => ipcRenderer.invoke('local_storage:get_audio_tags'),
+  set_audio_tags: (tags: string[]) => ipcRenderer.invoke('local_storage:set_audio_tags', tags)
 })
