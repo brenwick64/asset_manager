@@ -1,3 +1,15 @@
+/* Variables */
+:root {
+    --color-primary: aquamarine;
+    --color-primary-dark: #66cdaa;
+    --color-primary-light: #b2f2e6;
+
+    --color-secondary: #f0f0f0;
+    --color-secondary-dark: #d9d9d9;
+    --color-secondary-light: #ffffff;
+}
+
+
 .app {
     display: flex;
     flex-direction: column;
@@ -23,3 +35,6 @@
 .hidden {
     display: none;
 }
+
+
+

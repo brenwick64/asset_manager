@@ -2,7 +2,7 @@ import { FILE_CATEGORY_MAPPINGS } from "../globals/constants"
 
 
 // Helper functions
-const normalizeAbsolutePath = (path: string): string => {
+export const normalizeAbsolutePath = (path: string): string => {
     const normalizedPath: string = path.replace(/\\/g, "/")
     // Remove the last directory, since its included in the relative path
     const lastSlashIndex: number = normalizedPath.lastIndexOf("/")

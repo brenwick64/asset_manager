@@ -8,4 +8,9 @@
 
 
 .pagination-btn {
+    cursor: pointer;
+}
+
+.pagination-btn-disabled {
+    opacity: 0.5;
 }

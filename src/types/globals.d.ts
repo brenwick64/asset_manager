@@ -4,7 +4,7 @@ declare global {
 			get_file_url: (absoluteRoot: string, relative: string) => Promise<string>
 		},
 		db: {
-			get_new_audio_asset: (audioAssets: AudioAsset) => Promise<AudioAsset[]>
+			get_new_audio_assets: (audioAssets: AudioAsset[]) => Promise<AudioAsset[]>
 			save_audio_asset: (fileEntries: AudioAsset) => Promise<Result>
 		},
 		fs: {

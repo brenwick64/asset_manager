@@ -1,3 +1,5 @@
+import { normalizeAbsolutePath } from "../utils/fileUploadUtils"
+
 type SaveAudioAssetPayload = {
     savedAssets: NewAudioAsset[]
     rejectedAssets: NewAudioAsset[]
@@ -8,21 +10,23 @@ type WriteAudioFilePayload = {
     absolutePath: string
 }
 
-
 export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<SaveAudioAssetPayload>> => {
     const savedAssets: NewAudioAsset[] = []
     const rejectedAssets: NewAudioAsset[] = []
 
     try{
         for(const asset of audioAssets) {
+            // Save asset to disk
             const fsPayload: WriteAudioFilePayload = await window.fs.write_audio_file(asset) 
-            
             if(!fsPayload.saved){
                 rejectedAssets.push(asset)
                 continue
             }
-            
-            asset.absolute_path = fsPayload.absolutePath
+
+             // Update absolute path with new location
+            asset.absolute_path = normalizeAbsolutePath(fsPayload.absolutePath)
+
+            // Save asset to DB
             const dbSaved: boolean = await window.db.save_audio_asset(asset)
             if(!dbSaved) {
                 rejectedAssets.push(asset)
