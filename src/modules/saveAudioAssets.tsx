@@ -1,38 +1,46 @@
-type FSPayload = {
-    saved: NewAudioAsset[]
-    failed: NewAudioAsset[]
-}
-
-type DBPayload = {
-    inserted: number
-    rejected: number
-}
+import { normalizeAbsolutePath } from "../utils/fileUploadUtils"
 
 type SaveAudioAssetPayload = {
-    fsResponse: Result<FSPayload>
-    dbResponse: Result<DBPayload>
+    savedAssets: NewAudioAsset[]
+    rejectedAssets: NewAudioAsset[]
 }
 
+type WriteAudioFilePayload = {
+    saved: boolean
+    absolutePath: string
+}
 
-export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<unknown>> => {
+export const saveAudioAsset = async (audioAssets: NewAudioAsset[]): Promise<Result<SaveAudioAssetPayload>> => {
+    const savedAssets: NewAudioAsset[] = []
+    const rejectedAssets: NewAudioAsset[] = []
 
-    const saveDB = async (assets: NewAudioAsset[]): Promise<Result<DBPayload>> => {
-        const result: Result<DBPayload> = await window.db.save_audio_assets(assets)  
-        return result
+    try{
+        for(const asset of audioAssets) {
+            // Save asset to disk
+            const fsPayload: WriteAudioFilePayload = await window.fs.write_audio_file(asset) 
+            if(!fsPayload.saved){
+                rejectedAssets.push(asset)
+                continue
+            }
+
+             // Update absolute path with new location
+            asset.absolute_path = normalizeAbsolutePath(fsPayload.absolutePath)
+
+            // Save asset to DB
+            const dbSaved: boolean = await window.db.save_audio_asset(asset)
+            if(!dbSaved) {
+                rejectedAssets.push(asset)
+                continue
+            }
+    
+            savedAssets.push(asset)
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 250)) // TODO: just to test loading screen logic
+        
+        return { payload: { savedAssets: savedAssets, rejectedAssets: rejectedAssets }, error: null }
     }
-
-    const saveFS = async (assets: NewAudioAsset[]): Promise<Result<FSPayload>> => {
-        const result: Result<FSPayload> = await window.fs.write_audio_files(assets)
-        return result
+    catch(err) {
+        return { payload: null, error: err instanceof Error ? err : Error("Server Error: saveAudioAsset") }
     }
-
-    // main workflow
-    const dbResult: Result<DBPayload> = await saveDB(audioAssets)    
-    const fsResult: Result<FSPayload> = await saveFS(audioAssets)
-
-
-    await new Promise(resolve => setTimeout(resolve, 250)) // TODO: just to test loading screen logic
-
-    const payload: SaveAudioAssetPayload = { fsResponse: fsResult, dbResponse: dbResult }
-    return { payload: payload, error: null }
 }

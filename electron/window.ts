@@ -14,7 +14,6 @@ export function createWindow(): BrowserWindow {
 			preload: path.join(__dirname, 'preload.mjs'),
 			contextIsolation: true		
 		}
-
 	})
 
 	if (VITE_DEV_SERVER_URL) {

@@ -15,7 +15,7 @@
 
 .blip-active {
   cursor: arrow;
-  background: rgb(51, 177, 250);
+  background: var(--color-primary);
   opacity: 0.85;
   transform: scale(1.5);
 }
